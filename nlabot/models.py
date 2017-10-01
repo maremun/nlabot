@@ -32,6 +32,7 @@ class User(Base):
     first_name = Column(String(64), nullable=True)
     last_name = Column(String(64), nullable=True)
     last_seen_at = Column(DateTime, default=datetime.now, nullable=False)
+    # TODO add server_default with timezone
     #state = Column(String(64), default='start|-1', nullable=False)
 
     student = relationship('Student', use_list=False, back_populates='user')
@@ -64,17 +65,19 @@ class Student(Base):
 class Submission(Base):
 
     __tablename__ = 'submissions'
+    __table_args__ = (UniqueConstraint('hw_id', 'student_id',
+                                       'submission_id'),)
 
     id = Column(Integer, primary_key=True)
     # Each submission is a tuple (student_id, hw_id, submission_id) to identify
     # student submitted a work, homework's serial number, submission number
-    # (e.g. Bershatsky submitted his 3rd attempt at solution to hw#3. 
+    # (e.g. Bershatsky submitted his 3rd attempt at solution to hw #3. 
     student_id = Column(foreign_key=('students.id'))
     hw_id = Column(Integer, nullable=False) # HW number
-    submission_id = Column(Integer, nullable=False) # Submission number
-    submitted = Column(DateTime, default=datetime.now(), nullable=False,
+    ordinal = Column(Integer, nullable=False) # Submission number
+    submitted_at = Column(DateTime, default=datetime.now(), nullable=False,
                              server_default=text('NOW()'))
-    grade = Column(Float(32), nullable=False) # Grade
+    grade = Column(Float(32), nullable=True) # Grade
 
     user = relationship('Student', back_populates='submissions')
 

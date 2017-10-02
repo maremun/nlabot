@@ -5,6 +5,7 @@ from datetime import datetime
 from sqlalchemy import Column, DateTime, Integer, String, ForeignKey, \
         Float, create_engine, UniqueConstraint
 from sqlalchemy.ext.declarative import as_declarative
+from sqlalchemy.dialects.postgresql import ENUM
 from sqlalchemy.orm import scoped_session, sessionmaker, relationship
 from sqlalchemy import text
 
@@ -24,6 +25,9 @@ class Base(object):
     pass
 
 
+StateType = ENUM('registered', 'unregistered', name='state_type')
+
+
 class User(Base):
 
     __tablename__ = 'users'
@@ -35,8 +39,7 @@ class User(Base):
     last_name = Column(String(64), nullable=True)
     last_seen_at = Column(DateTime, default=datetime.now, nullable=False)
     # TODO add server_default with timezone
-    # use enum type for states
-    #state = Column(String(64), default='start|-1', nullable=False)
+    state = Column(StateType, server_default='unregistered', nullable=False)
     
     student = relationship('Student', back_populates='users')
 

@@ -2,3 +2,4 @@ nlabotenv/
 __pycache__/
 *.egg-info/
 var/
+nlabot_settings.py

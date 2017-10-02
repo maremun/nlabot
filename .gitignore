@@ -1,1 +1,4 @@
 nlabotenv/
+__pycache__/
+*.egg-info/
+var/

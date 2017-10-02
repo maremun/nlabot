@@ -3,7 +3,7 @@
 
 from datetime import datetime
 from sqlalchemy import Column, DateTime, Integer, String, ForeignKey, \
-        create_engine
+        Float, create_engine, UniqueConstraint
 from sqlalchemy.ext.declarative import as_declarative
 from sqlalchemy.orm import scoped_session, sessionmaker, relationship
 from sqlalchemy import text
@@ -37,7 +37,7 @@ class User(Base):
     # use enum type for states
     #state = Column(String(64), default='start|-1', nullable=False)
 
-    student = relationship('Student', use_list=False, back_populates='user')
+    # student = relationship('Student', use_list=False, back_populates='user')
 
     def __repr__(self):
         return f'<User[{self.user_id}] {self.username}>'
@@ -48,7 +48,7 @@ class Student(Base):
     __tablename__ = 'students'
 
     student_id = Column(Integer, primary_key=True)
-    user_id = Column(foreign_key=('users.user_id'))
+    user_id = Column(ForeignKey('users.user_id'))
     first_name = Column(String(64), nullable=False)
     last_name = Column(String(64), nullable=False)
     avg_grade = Column(Float(32), nullable=True)
@@ -73,7 +73,7 @@ class Submission(Base):
     # Each submission is a tuple (student_id, hw_id, submission_id) to identify
     # student submitted a work, homework's serial number, submission number
     # (e.g. Bershatsky submitted his 3rd attempt at solution to hw #3.
-    student_id = Column(foreign_key=('students.student_id'))
+    student_id = Column(ForeignKey('students.student_id'))
     hw_id = Column(Integer, nullable=False) # HW number
     ordinal = Column(Integer, nullable=False) # Submission number
     submitted_at = Column(DateTime, default=datetime.now(), nullable=False,

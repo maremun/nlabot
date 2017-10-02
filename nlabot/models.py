@@ -29,6 +29,7 @@ class User(Base):
     __tablename__ = 'users'
 
     user_id = Column(Integer, primary_key=True)
+    student_id = Column(ForeignKey('students.student_id'))
     username = Column(String(64), nullable=True)
     first_name = Column(String(64), nullable=True)
     last_name = Column(String(64), nullable=True)
@@ -36,8 +37,8 @@ class User(Base):
     # TODO add server_default with timezone
     # use enum type for states
     #state = Column(String(64), default='start|-1', nullable=False)
-
-    # student = relationship('Student', use_list=False, back_populates='user')
+    
+    student = relationship('Student', back_populates='users')
 
     def __repr__(self):
         return f'<User[{self.user_id}] {self.username}>'
@@ -48,13 +49,12 @@ class Student(Base):
     __tablename__ = 'students'
 
     student_id = Column(Integer, primary_key=True)
-    user_id = Column(ForeignKey('users.user_id'))
     first_name = Column(String(64), nullable=False)
     last_name = Column(String(64), nullable=False)
     avg_grade = Column(Float(32), nullable=True)
 
-    user = relationship('User', back_populates='student')
-
+    users = relationship('User', back_populates='student',
+                         cascade='all, delete, delete-orphan')
     submissions = relationship('Submission', back_populates='student',
                                cascade='all, delete, delete-orphan')
 
@@ -80,7 +80,7 @@ class Submission(Base):
                              server_default=text('NOW()'))
     grade = Column(Float(32), nullable=True) # Grade
 
-    user = relationship('Student', back_populates='submissions')
+    student = relationship('Student', back_populates='submissions')
 
     def __repr__(self):
         return f'<Submission[id={self.submission_id}] student' \

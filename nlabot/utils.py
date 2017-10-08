@@ -6,6 +6,13 @@ from datetime import datetime
 
 from .telegram import get_file
 
+WRONG_TITLE_TEXT = "Uh-oh! Something wrong with your submission title. " \
+                  "Please rename it as hw-_N_, where _N_ is the number of " \
+                  "the homework you are trying to submit."
+WRONG_TYPE_TEXT = 'Uh-oh! Your submission is not Jupyter notebook!'
+MIMES = ['text/plain', 'application/x-ipynb+json'] 
+
+
 def check_started(user_id, conn):
     row = {'user_id': user_id}
     cursor = conn.execute("""
@@ -41,15 +48,15 @@ def download_file(msg, student, conn):
         text = 'File is too big.'
         return text
 
-    if mime_type == 'text/plain' and file_name.endswith('.ipynb'):
-        if file_name.startswith('HW'):
+    if mime_type in MIMES and file_name.endswith('.ipynb'):
+        if file_name.startswith('hw-'):
             hw_id = int(file_name[3:4])
             if hw_id < 1 and hw_id > 4:
                 text = 'Homework number is not valid.'
                 return text
 
             student_id, last_name, first_name = student
-            directory = last_name + first_name + '/' + f'HW{hw_id}/'
+            directory = last_name + first_name + '/' + f'hw{hw_id}/'
             if not os.path.exists(directory):
                 os.makedirs(directory)
             download = get_file(file_id)
@@ -83,15 +90,15 @@ def download_file(msg, student, conn):
                 conn.rollback()
 
             # TODO download and insert symultaneously
-            with open(f'{directory}{file_name[:4]}_{ordinal}_{time}' \
-                      f'{file_name[4:]}', 'wb') as f:
+            with open(f'{directory}{last_name}-{first_name}-{file_name[:4]}_' \
+                      f'{ordinal}_{time}{file_name[4:]}', 'wb') as f:
                 f.write(download)
 
-            text = f'Received HW#{hw_id} submission#{ordinal} from ' \
+            text = f'Received hw#{hw_id} submission#{ordinal} from ' \
                    f'{first_name} {last_name}.'
         else:
-            text = wrong_title_text
+            text = WRONG_TITLE_TEXT
     else:
-        text = wrong_type_text
+        text = WRONG_TYPE_TEXT
 
     return text

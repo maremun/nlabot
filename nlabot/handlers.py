@@ -9,23 +9,19 @@ from .models import StateType
 from .utils import check_started, check_registered, download_file
 
 
-error_text = "Sorry, I don't understand. If you are unregistered, please " \
+ERROR_TEXT = "Sorry, I don't understand. If you are unregistered, please " \
        "register by sending me a message with your *FirstName " \
        "LastName*. Otherwise, make a submission (your homework)."
-not_started_text = "Send /start command to interact with me."
-not_enrolled_text = "Uh-oh! You seem to be not in the list of enrolled " \
+NOT_STARTED_TEXT = "Send /start command to interact with me."
+NOT_ENROLLED_TEXT = "Uh-oh! You seem to be not in the list of enrolled " \
                        "students, please contact TA to correct this."
-added_student_text = "Congrats! You have joined the NLA army! SVD bless you!"
+ADDED_STUDENT_TEXT = "Congrats! You have joined the NLA army! SVD bless you!"
 taken_error = "Uh-oh! Somebody took you name! Please report this to your TA!"
-started_text = "You've already started interaction with me."
-registered_text = "You've already registered. To reset use /start command."
-not_registered_text = "You haven't registered yet. Do it by sending me a " \
+STARTED_TEXT = "You've already started interaction with me."
+REGISTERED_TEXT = "You've already registered. To reset use /start command."
+NOT_REGISTERED_TEXT = "You haven't registered yet. Do it by sending me a " \
                       "message with your *Firstname Lastname*."
-wrong_title_text = "Uh-oh! Something wrong with your submission title. " \
-                  "Please rename it as HW#_N_, where _N_ is the number of " \
-                  "the homework you are trying to submit."
-wrong_type_text = 'Uh-oh! Your submission is not Jupyter notebook!'
-name_format_text = '*Firstname Lastname*.'
+NAME_FORMAT_TEXT = '*Firstname Lastname*.'
 
 def handle_update(update, sess, conn):
     print(update)
@@ -73,18 +69,18 @@ def handle_update(update, sess, conn):
         else:
         # REGISTERATION (CHANGE state TO registered)
             if not started:
-                text = not_started_text
+                text = NOT_STARTED_TEXT
                 send_message(msg['chat']['id'], text, sess=sess)
                 return update['update_id']
 
             if check_registered(user_id, conn)[0]:
-                text = registered_text
+                text = REGISTERED_TEXT
                 send_message(msg['chat']['id'], text, sess=sess)
                 return update['update_id']
 
             split = msg['text'].strip().split(maxsplit=1)
             if len(split) != 2:
-                text = name_format_text
+                text = NAME_FORMAT_TEXT
                 send_message(msg['chat']['id'], text, sess=sess)
                 return update['update_id']
 
@@ -103,9 +99,9 @@ def handle_update(update, sess, conn):
                 conn.commit()
                 result = cursor.first()
                 if result is None:
-                    text = not_enrolled_text
+                    text = NOT_ENROLLED_TEXT
                 else:
-                    text = added_student_text
+                    text = ADDED_STUDENT_TEXT
 
             except IntegrityError:
                 text = taken_error
@@ -115,23 +111,23 @@ def handle_update(update, sess, conn):
                 print(type(e))
                 print(e)
 
-                text = error_text
+                text = ERROR_TEXT
                 conn.rollback()
 
     elif msg.get('document'):
         if not started:
-            text = not_started_text
+            text = NOT_STARTED_TEXT
             send_message(msg['chat']['id'], text, sess=sess)
             return update['update_id']
 
         registered, student = check_registered(user_id, conn)
         if not registered:
-            text = not_registered_text
+            text = NOT_REGISTERED_TEXT
         else:
             text = download_file(msg, student, conn)
 
     else:
-        text = error_text
+        text = ERROR_TEXT
 
     print(text)
     send_message(msg['chat']['id'], text, sess=sess)

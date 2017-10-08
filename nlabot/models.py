@@ -33,14 +33,14 @@ class User(Base):
     __tablename__ = 'users'
 
     user_id = Column(Integer, primary_key=True)
-    student_id = Column(ForeignKey('students.student_id'))
+    student_id = Column(ForeignKey('students.student_id'), unique=True)
     username = Column(String(64), nullable=True)
     first_name = Column(String(64), nullable=True)
     last_name = Column(String(64), nullable=True)
     last_seen_at = Column(DateTime, default=datetime.now, nullable=False)
     # TODO add server_default with timezone
     state = Column(StateType, server_default='unregistered', nullable=False)
-    
+
     student = relationship('Student', back_populates='users')
 
     def __repr__(self):

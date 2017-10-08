@@ -8,8 +8,8 @@ See for details https://core.telegram.org/bots/api.
 
 import logging
 
-from requests import Session
-from .settings import API_URL, API_TOKEN
+from requests import Session, get
+from .settings import API_URL, API_TOKEN, API_DOWNLOAD_URL
 
 
 def send_request(method=None, params=None, sess=None):
@@ -87,3 +87,13 @@ def set_webhook(url, certificate=None, max_connections=None,
                   max_connections=max_connections,
                   allowed_updates=allowed_updates)
     return send_request('setWebhook', params)
+
+def get_file(file_id, sess=None):
+    r = send_request('getFile', {'file_id': file_id})
+    print(r)
+    file_path = r['result']['file_path']
+    download_link = API_DOWNLOAD_URL.format(token=API_TOKEN,
+                                            file_path=file_path)
+# TODO if file is loo big?
+    download = get(download_link)
+    return download.content

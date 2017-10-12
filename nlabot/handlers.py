@@ -2,6 +2,7 @@
 #   handlers.py
 
 from sqlalchemy.exc import ResourceClosedError, IntegrityError
+from requests import Session
 
 from datetime import datetime
 from .telegram import send_message
@@ -23,7 +24,7 @@ NOT_REGISTERED_TEXT = "You haven't registered yet. Do it by sending me a " \
                       "message with your *Firstname Lastname*."
 NAME_FORMAT_TEXT = '*Firstname Lastname*.'
 
-def handle_update(update, sess, conn):
+def handle_update(update, sess, conn, queue):
     print(update)
     if update.get('message'):
         msg = update['message']
@@ -124,11 +125,24 @@ def handle_update(update, sess, conn):
         if not registered:
             text = NOT_REGISTERED_TEXT
         else:
-            text = download_file(msg, student, conn)
+            text, submission_id, filepath = download_file(msg, student, conn)
+            queue.enqueue_call(grade, args=(submission_id, filepath))
 
     else:
         text = ERROR_TEXT
 
     print(text)
     send_message(msg['chat']['id'], text, sess=sess)
+
     return update['update_id']
+
+
+def respond(user_id):
+    print(f'respond to {user_id}')
+    text = 'fasdf'
+    sess = Session()
+    send_message(user_id, text, sess=sess)
+
+
+def grade(submission_id, path):
+    pass

@@ -3,7 +3,7 @@
 
 from datetime import datetime
 from sqlalchemy import Column, DateTime, Integer, String, ForeignKey, \
-        Float, create_engine, UniqueConstraint
+        Float, create_engine, UniqueConstraint, BigInteger
 from sqlalchemy.ext.declarative import as_declarative
 from sqlalchemy.dialects.postgresql import ENUM
 from sqlalchemy.orm import scoped_session, sessionmaker, relationship
@@ -73,6 +73,8 @@ class Submission(Base):
                                        'submission_id'),)
 
     submission_id = Column(Integer, primary_key=True)
+    file_id = Column(String(128), unique=True)
+    path = Column(String(256))
     # Each submission is a tuple (student_id, hw_id, submission_id) to identify
     # student submitted a work, homework's serial number, submission number
     # (e.g. Bershatsky submitted his 3rd attempt at solution to hw #3.

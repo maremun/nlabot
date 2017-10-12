@@ -44,9 +44,11 @@ def download_file(msg, student, conn):
     file_name = submission.get('file_name', '')
     mime_type = submission.get('mime_type', '')
     file_size = submission.get('file_size', 0)
+    submission_id = None
+    filepath = None
     if file_size / 1048576 > 20:
         text = 'File is too big.'
-        return text
+        return text, submission_id, filepath
 
     if mime_type in MIMES and file_name.endswith('.ipynb'):
         if file_name.startswith('hw-'):
@@ -56,49 +58,57 @@ def download_file(msg, student, conn):
                 return text
 
             student_id, last_name, first_name = student
-            directory = last_name + first_name + '/' + f'hw{hw_id}/'
+            directory = os.path.join(f'{last_name}-{first_name}-' \
+                                     f'{student_id:03}', f'hw{hw_id}')
             if not os.path.exists(directory):
                 os.makedirs(directory)
             download = get_file(file_id)
             time = datetime.fromtimestamp(
                        msg['date']
                    )
+            path = os.path.join(f'{directory}',
+                                    f'{last_name}-{first_name}-' \
+                                    f'{file_name[:4]}')
             ftime = time.strftime('%Y-%m-%d%H:%M:%S')
-            row = {'student_id': student_id, 'hw_id': hw_id,
+            row = {'file_id': file_id, 'path': path,
+                   'student_id': student_id, 'hw_id': hw_id,
                    'submitted_at': time}
             try:
                 cursor = conn.execute("""
                     WITH ord AS (
-                        SELECT COALESCE(MAX(ordinal), 0)
+                        SELECT COALESCE(MAX(ordinal), 0) + 1 AS next
                         FROM submissions
-                        WHERE student_id = :student_id AND hw_id = :hw_id)
+                        WHERE student_id = :student_id AND hw_id = :hw_id
+                        LIMIT 1)
                     INSERT INTO submissions (
-                        student_id, hw_id, ordinal, submitted_at
+                        file_id, path, student_id, hw_id, ordinal, submitted_at
                     )
-                    VALUES (
-                        :student_id, :hw_id, (SELECT * FROM ord),
-                        :submitted_at
-                    )
-                    RETURNING ordinal;
+                    SELECT 
+                        :file_id, :path||'_'||next||'_'||to_char(:submitted_at,
+                        'YYMONDD-HH:MI:SS')||'.ipynb',
+                        :student_id, :hw_id, next, :submitted_at
+                    FROM ord
+                    RETURNING submission_id, ordinal, path
                 """, row)
+
+                submission_id, ordinal, filepath = cursor.first()
+
+                with open(path, 'wb') as f:
+                    f.write(download)
+
+                text = f'Received hw#{hw_id} submission#{ordinal} from ' \
+                       f'{first_name} {last_name}.'
+
                 conn.commit()
-                ordinal = cursor.first()[0] + 1
 
             except Exception as e:
                 print(type(e))
                 print(e)
                 conn.rollback()
 
-            # TODO download and insert symultaneously
-            with open(f'{directory}{last_name}-{first_name}-{file_name[:4]}_' \
-                      f'{ordinal}_{time}{file_name[4:]}', 'wb') as f:
-                f.write(download)
-
-            text = f'Received hw#{hw_id} submission#{ordinal} from ' \
-                   f'{first_name} {last_name}.'
         else:
             text = WRONG_TITLE_TEXT
     else:
         text = WRONG_TYPE_TEXT
 
-    return text
+    return text, submission_id, filepath

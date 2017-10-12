@@ -4,6 +4,8 @@
 
 import click
 import logging
+from redis import Redis
+from rq import Connection, Queue, Worker
 
 from requests import Session
 from .models import connect_database
@@ -17,8 +19,11 @@ def main():
                         level=logging.INFO)
 
 @main.command(help='Run long polling loop.')
-def main_loop():
-    conn = connect_database('postgres://nlabot@127.0.0.1/nlabot')
+@click.option('--dsn', default='postgres://nlabot@127.0.0.1/nlabot')
+@click.option('--redis-host', default='127.0.0.1', help='')
+def main_loop(dsn, redis_host):
+    queue = Queue(connection=Redis(host=redis_host))
+    conn = connect_database(dsn)
     sess = Session()
     offset = 0
 
@@ -29,5 +34,16 @@ def main_loop():
             continue
 
         for upd in updates.get('result'):
-            upd_id = handle_update(upd, sess, conn)
+            upd_id = handle_update(upd, sess, conn, queue)
             offset = max(offset, upd_id) + 1
+
+
+@main.command(help='')
+@click.option('--dsn', default='postgres://nlabot@127.0.0.1/nlabot')
+@click.option('--redis-host', default='127.0.0.1', help='')
+def worker(dsn, redis_host):
+    conn = connect_database(dsn)
+
+    with Connection(Redis(host=redis_host)):
+        worker = Worker(['default'])
+        worker.work()

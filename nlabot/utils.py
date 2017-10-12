@@ -83,8 +83,8 @@ def download_file(msg, student, conn):
                         file_id, path, student_id, hw_id, ordinal, submitted_at
                     )
                     SELECT
-                        :file_id, :path||'_'||next||'_'||to_char(:submitted_at,
-                        'YYMONDD-HH:MI:SS')||'.ipynb',
+                        :file_id, :path||'_'||next||'_'||
+                        to_char(:submitted_at, 'YYMONDD-HH:MI:SS')||'.ipynb',
                         :student_id, :hw_id, next, :submitted_at
                     FROM ord
                     RETURNING submission_id, ordinal, path
@@ -92,7 +92,7 @@ def download_file(msg, student, conn):
 
                 submission_id, ordinal, filepath = cursor.first()
 
-                with open(path, 'wb') as f:
+                with open(filepath, 'wb') as f:
                     f.write(download)
 
                 text = f'Received hw#{hw_id} submission#{ordinal} from ' \

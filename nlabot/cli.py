@@ -18,6 +18,7 @@ def main():
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
                         level=logging.INFO)
 
+
 @main.command(help='Run long polling loop.')
 @click.option('--dsn', default='postgres://nlabot@127.0.0.1/nlabot')
 @click.option('--redis-host', default='127.0.0.1', help='')
@@ -42,8 +43,6 @@ def main_loop(dsn, redis_host):
 @click.option('--dsn', default='postgres://nlabot@127.0.0.1/nlabot')
 @click.option('--redis-host', default='127.0.0.1', help='')
 def worker(dsn, redis_host):
-    conn = connect_database(dsn)
-
     with Connection(Redis(host=redis_host)):
         worker = Worker(['default'])
         worker.work()

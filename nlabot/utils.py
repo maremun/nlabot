@@ -10,14 +10,14 @@ WRONG_TITLE_TEXT = "Uh-oh! Something wrong with your submission title. " \
                   "Please rename it as hw-_N_, where _N_ is the number of " \
                   "the homework you are trying to submit."
 WRONG_TYPE_TEXT = 'Uh-oh! Your submission is not Jupyter notebook!'
-MIMES = ['text/plain', 'application/x-ipynb+json'] 
+MIMES = ['text/plain', 'application/x-ipynb+json']
 
 
 def check_started(user_id, conn):
     row = {'user_id': user_id}
     cursor = conn.execute("""
-	SELECT EXISTS(SELECT * FROM users
-	WHERE user_id = :user_id)
+        SELECT EXISTS(SELECT * FROM users
+        WHERE user_id = :user_id)
     """, row)
     return cursor.first()[0]
 
@@ -58,7 +58,7 @@ def download_file(msg, student, conn):
                 return text
 
             student_id, last_name, first_name = student
-            directory = os.path.join(f'{last_name}-{first_name}-' \
+            directory = os.path.join(f'{last_name}-{first_name}-'
                                      f'{student_id:03}', f'hw{hw_id}')
             if not os.path.exists(directory):
                 os.makedirs(directory)
@@ -67,9 +67,8 @@ def download_file(msg, student, conn):
                        msg['date']
                    )
             path = os.path.join(f'{directory}',
-                                    f'{last_name}-{first_name}-' \
-                                    f'{file_name[:4]}')
-            ftime = time.strftime('%Y-%m-%d%H:%M:%S')
+                                f'{last_name}-{first_name}-'
+                                f'{file_name[:4]}')
             row = {'file_id': file_id, 'path': path,
                    'student_id': student_id, 'hw_id': hw_id,
                    'submitted_at': time}
@@ -83,7 +82,7 @@ def download_file(msg, student, conn):
                     INSERT INTO submissions (
                         file_id, path, student_id, hw_id, ordinal, submitted_at
                     )
-                    SELECT 
+                    SELECT
                         :file_id, :path||'_'||next||'_'||to_char(:submitted_at,
                         'YYMONDD-HH:MI:SS')||'.ipynb',
                         :student_id, :hw_id, next, :submitted_at
@@ -97,7 +96,9 @@ def download_file(msg, student, conn):
                     f.write(download)
 
                 text = f'Received hw#{hw_id} submission#{ordinal} from ' \
-                       f'{first_name} {last_name}.'
+                       f'{first_name} {last_name}. Parts of the homework ' \
+                       'are graded automatically. I will let you know the ' \
+                       'grade soon.'
 
                 conn.commit()
 

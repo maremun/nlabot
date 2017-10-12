@@ -1,8 +1,6 @@
 #   encoding: utf8
 #   settings.py
 
-from os.path import dirname, join, realpath
-
 
 # Debug and profiling settings
 DEBUG = True

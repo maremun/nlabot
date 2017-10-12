@@ -54,7 +54,7 @@ def get_updates(offset=None, limit=100, timeout=60, sess=None):
     return send_request('getUpdates', params, sess)
 
 
-def send_message(chat_id, text, reply_markup=None, parse_mode='Markdown', \
+def send_message(chat_id, text, reply_markup=None, parse_mode='Markdown',
                  sess=None):
     params = dict(chat_id=chat_id, text=text, parse_mode=parse_mode)
     if reply_markup:
@@ -87,6 +87,7 @@ def set_webhook(url, certificate=None, max_connections=None,
                   max_connections=max_connections,
                   allowed_updates=allowed_updates)
     return send_request('setWebhook', params)
+
 
 def get_file(file_id, sess=None):
     r = send_request('getFile', {'file_id': file_id})

@@ -1,12 +1,11 @@
 #   encoding: utf-8
 #   handlers.py
 
-from sqlalchemy.exc import ResourceClosedError, IntegrityError
+from sqlalchemy.exc import IntegrityError
 from requests import Session
 
 from datetime import datetime
 from .telegram import send_message
-from .models import StateType
 from .utils import check_started, check_registered, download_file
 
 
@@ -24,6 +23,7 @@ NOT_REGISTERED_TEXT = "You haven't registered yet. Do it by sending me a " \
                       "message with your *Firstname Lastname*."
 NAME_FORMAT_TEXT = '*Firstname Lastname*.'
 
+
 def handle_update(update, sess, conn, queue):
     print(update)
     if update.get('message'):
@@ -36,7 +36,7 @@ def handle_update(update, sess, conn, queue):
     started = check_started(user_id, conn)
     if msg.get('text'):
         if msg['text'].startswith('/start'):
-        # STARTING (ADD USER TO users TABLE)
+            # STARTING (ADD USER TO users TABLE)
             if started:
                 cursor = conn.execute("""
                     DELETE FROM users
@@ -68,7 +68,7 @@ def handle_update(update, sess, conn, queue):
             text = 'Hello! Please register to submit your homeworks. ' \
                    'Send your *FirstName LastName*.'
         else:
-        # REGISTERATION (CHANGE state TO registered)
+            # REGISTERATION (CHANGE state TO registered)
             if not started:
                 text = NOT_STARTED_TEXT
                 send_message(msg['chat']['id'], text, sess=sess)

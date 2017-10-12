@@ -3,7 +3,7 @@
 
 from datetime import datetime
 from sqlalchemy import Column, DateTime, Integer, String, ForeignKey, \
-        Float, create_engine, UniqueConstraint, BigInteger
+        Float, create_engine, UniqueConstraint
 from sqlalchemy.ext.declarative import as_declarative
 from sqlalchemy.dialects.postgresql import ENUM
 from sqlalchemy.orm import scoped_session, sessionmaker, relationship
@@ -79,11 +79,11 @@ class Submission(Base):
     # student submitted a work, homework's serial number, submission number
     # (e.g. Bershatsky submitted his 3rd attempt at solution to hw #3.
     student_id = Column(ForeignKey('students.student_id'))
-    hw_id = Column(Integer, nullable=False) # HW number
-    ordinal = Column(Integer, nullable=False) # Submission number
+    hw_id = Column(Integer, nullable=False)  # HW number
+    ordinal = Column(Integer, nullable=False)  # Submission number
     submitted_at = Column(DateTime, default=datetime.now(), nullable=False,
-                             server_default=text('NOW()'))
-    grade = Column(Float(32), nullable=True) # Grade
+                          server_default=text('NOW()'))
+    grade = Column(Float(32), nullable=True)  # Grade
 
     student = relationship('Student', back_populates='submissions')
 

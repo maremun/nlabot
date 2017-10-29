@@ -7,7 +7,7 @@ from requests import Session
 from datetime import datetime
 from .telegram import send_message
 from .utils import check_started, check_registered, download_file
-
+from .jail import grade
 
 ERROR_TEXT = "Sorry, I don't understand. If you are unregistered, please " \
        "register by sending me a message with your *FirstName " \
@@ -142,7 +142,3 @@ def respond(user_id):
     text = 'fasdf'
     sess = Session()
     send_message(user_id, text, sess=sess)
-
-
-def grade(submission_id, path):
-    pass

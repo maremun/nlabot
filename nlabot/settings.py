@@ -16,6 +16,6 @@ DB_URI = 'postgres://nlabot@127.0.0.1/nlabot'
 
 # override default settings(ignore F401 and F403 flake8 errors)
 try:
-    from nlabot_settings import API_TOKEN
+    from nlabot_settings import *  # noqa
 except ImportError:
     pass

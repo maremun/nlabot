@@ -1,4 +1,13 @@
-from setuptools import setup, find_packages
+#   encoding: utf8
+#   setup.py
 
-setup(name='nlabot', packages=find_packages(),
-        entry_points={'console_scripts':['nlabot = nlabot.cli:main']})
+from setuptools import setup, find_packages
+from nlabot import VERSION
+
+setup(name='nlabot',
+      version=VERSION,
+      packages=find_packages(),
+      entry_points={
+          'console_scripts': [
+              'nlabot = nlabot.cli:main']
+      })

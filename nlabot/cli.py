@@ -22,7 +22,7 @@ def main():
 @main.command(help='Run long polling loop.')
 @click.option('--dsn', default='postgres://nlabot@127.0.0.1/nlabot')
 @click.option('--redis-host', default='127.0.0.1', help='')
-def main_loop(dsn, redis_host):
+def serve(dsn, redis_host):
     queue = Queue(connection=Redis(host=redis_host))
     conn = connect_database(dsn)
     sess = Session()
@@ -39,10 +39,10 @@ def main_loop(dsn, redis_host):
             offset = max(offset, upd_id) + 1
 
 
-@main.command(help='')
+@main.command(help='Launch worker for homework processing.')
 @click.option('--dsn', default='postgres://nlabot@127.0.0.1/nlabot')
 @click.option('--redis-host', default='127.0.0.1', help='')
-def worker(dsn, redis_host):
+def work(dsn, redis_host):
     with Connection(Redis(host=redis_host)):
         worker = Worker(['default'])
         worker.work()

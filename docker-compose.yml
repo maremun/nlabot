@@ -19,6 +19,7 @@ services:
         - 'postgres'
         - 'redis'
         volumes:
+        - './notebooks:/nlabot/notebooks'
         - './nlabot_settings.py:/nlabot/nlabot_settings.py'
     ta:
         build:
@@ -29,4 +30,14 @@ services:
         - 'postgres'
         - 'redis'
         volumes:
+        - './notebooks:/nlabot/notebooks'
+        - '/var/run/docker.sock:/var/run/docker.sock'
         - './nlabot_settings.py:/nlabot/nlabot_settings.py'
+    # this docker image is run from ta and is never used manually
+    cell:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        command: imprison
+        volumes:
+        - './notebooks:/nlabot/notebooks'

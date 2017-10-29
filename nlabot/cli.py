@@ -4,13 +4,15 @@
 
 import click
 import logging
+
 from redis import Redis
+from requests import Session
 from rq import Connection, Queue, Worker
 
-from requests import Session
 from .models import connect_database
 from .telegram import get_updates
 from .handlers import handle_update
+from .settings import DB_URI, REDIS_HOST
 
 
 @click.group(help=__doc__)
@@ -20,9 +22,12 @@ def main():
 
 
 @main.command(help='Run long polling loop.')
-@click.option('--dsn', default='postgres://nlabot@127.0.0.1/nlabot')
-@click.option('--redis-host', default='127.0.0.1', help='')
+@click.option('--dsn', default=DB_URI, help='Data Service Name.')
+@click.option('--redis-host',
+              default=REDIS_HOST,
+              help='Redis Queue (RQ) message broker.')
 def serve(dsn, redis_host):
+    logging.info('nla bot started.')
     queue = Queue(connection=Redis(host=redis_host))
     conn = connect_database(dsn)
     sess = Session()
@@ -40,9 +45,12 @@ def serve(dsn, redis_host):
 
 
 @main.command(help='Launch worker for homework processing.')
-@click.option('--dsn', default='postgres://nlabot@127.0.0.1/nlabot')
-@click.option('--redis-host', default='127.0.0.1', help='')
+@click.option('--dsn', default=DB_URI, help='Data Service Name.')
+@click.option('--redis-host',
+              default=REDIS_HOST,
+              help='Redis Queue (RQ) message broker.')
 def work(dsn, redis_host):
+    logging.info('nla ta started.')
     with Connection(Redis(host=redis_host)):
         worker = Worker(['default'])
         worker.work()

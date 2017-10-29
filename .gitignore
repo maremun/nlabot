@@ -1,5 +1,15 @@
+# ignore environment dirs
+env/
 nlabotenv/
+
+# ignore python stuff
 __pycache__/
 *.egg-info/
+.ipynb_checkpoints/
+
+# ignore data dirs
+data/
 var/
+
+# ignore configuration files
 nlabot_settings.py

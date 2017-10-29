@@ -22,7 +22,6 @@ def find_notebook(fullname, path=None):
     and tries turning "Foo_Bar" into "Foo Bar" if Foo_Bar
     does not exist.
     """
-    print(path, fullname)
     name = fullname.rsplit('.', 1)[-1]
     if not path:
         path = sys.path

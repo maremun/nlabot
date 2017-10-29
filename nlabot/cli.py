@@ -5,9 +5,13 @@
 import click
 import logging
 
+from json import dump
 from redis import Redis
 from requests import Session
 from rq import Connection, Queue, Worker
+from sys import path, stdout
+from os.path import basename, dirname, realpath, splitext
+from importlib import import_module
 
 from .models import connect_database
 from .telegram import get_updates
@@ -54,3 +58,34 @@ def work(dsn, redis_host):
     with Connection(Redis(host=redis_host)):
         worker = Worker(['default'])
         worker.work()
+
+
+@main.command(help='Isolate homework processing.')
+@click.option('-o', '--output',
+              type=click.Path(),
+              help='Optional output file.')
+@click.argument('pset', type=click.Choice(['test']))
+@click.argument('filename', type=click.Path(exists=True))
+def imprison(output, pset, filename):
+    logging.info('cell created for %s.', filename)
+    path.append(dirname(realpath(filename)))
+
+    try:
+        from .nbloader import NotebookFinder  # noqa
+        module = import_module(splitext(basename(filename))[0])
+    except Exception as e:
+        logging.error('During homework processing exception was raised.',
+                      exc_info=True)
+        exit(1)
+
+    import nlabot.checkers as checkers
+
+    checker = getattr(checkers, f'{pset.capitalize()}Checker')
+    result = checker(module)()
+
+    if output:
+        fout = open(output, 'w')  # XXX
+    else:
+        fout = stdout
+
+    dump(result, fout, ensure_ascii=False)

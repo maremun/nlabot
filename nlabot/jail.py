@@ -1,16 +1,24 @@
 #   encoding: utf-8
 #   jail.py
 
+import logging
+
 from docker import APIClient
 from json import loads
-from os.path import realpath
+from os.path import realpath, exists
+
+from .telegram import get_file
 
 
-def grade(submission_id, path):
-    #   TODO: get notebook filename by submission_id and path
+def grade(submission_id, file_id, hw_id, filepath):
+    #   TODO: pset = f'pset{hw_id}' when hw checkers are ready.
     pset = 'test'
-    filename = 'notebooks/testnotebook.ipynb'
-    result = isolate(pset, filename)
+    if not exists(filepath):
+        file_to_check = get_file(file_id)
+        with open(filepath, 'wb') as f:
+            f.write(file_to_check)
+
+    result = isolate(pset, filepath)
     print(result)
     #   TODO: store grade into database
     #   TODO: notify student
@@ -18,6 +26,7 @@ def grade(submission_id, path):
 
 def isolate(pset, filename):
     notebook = realpath(filename)
+    notebook = '/Users/maremun/projects/nlabot/' + filename
     cli = APIClient()
     container = cli.create_container(
         image='nlabot_cell',
@@ -46,6 +55,8 @@ def isolate(pset, filename):
     elif retcode != 0:
         return 'fail'
 
-    json = loads(cli.logs(container).decode('utf8'))  # TODO: use output file
+    logging.info('%s', cli.logs(container).decode('utf8'))
+    #   TODO: use output file
+    json = loads(cli.logs(container, stderr=False).decode('utf8'))
 
     return json

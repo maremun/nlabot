@@ -68,7 +68,7 @@ def handle_update(update, sess, conn, queue):
             text = 'Hello! Please register to submit your homeworks. ' \
                    'Send your *FirstName LastName*.'
         else:
-            # REGISTERATION (CHANGE state TO registered)
+            # REGISTRATION (CHANGE state TO registered)
             if not started:
                 text = NOT_STARTED_TEXT
                 send_message(msg['chat']['id'], text, sess=sess)
@@ -125,8 +125,13 @@ def handle_update(update, sess, conn, queue):
         if not registered:
             text = NOT_REGISTERED_TEXT
         else:
-            text, submission_id, filepath = download_file(msg, student, conn)
-            queue.enqueue_call(grade, args=(submission_id, filepath))
+            d_params = download_file(msg, student, conn)
+            text, submission_id, file_id, hw_id, filepath = d_params
+            if filepath is not None:
+                queue.enqueue_call(grade, args=(submission_id,
+                                                file_id,
+                                                hw_id,
+                                                filepath))
 
     else:
         text = ERROR_TEXT

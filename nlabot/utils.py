@@ -7,9 +7,9 @@ from datetime import datetime
 from .telegram import get_file
 
 WRONG_TITLE_TEXT = "Uh-oh! Something wrong with your submission title. " \
-                  "Please rename it as hw-_N_, where _N_ is the number of " \
-                  "the homework you are trying to submit."
-WRONG_TYPE_TEXT = 'Uh-oh! Your submission is not Jupyter notebook!'
+                   "Please rename it as hw-_N_, where _N_ is the number of " \
+                   "the homework you are trying to submit."
+WRONG_TYPE_TEXT = 'Uh-oh! Your submission is not a Jupyter notebook!'
 MIMES = ['text/plain', 'application/x-ipynb+json']
 
 
@@ -45,12 +45,14 @@ def download_file(msg, student, conn):
     mime_type = submission.get('mime_type', '')
     file_size = submission.get('file_size', 0)
     submission_id = None
+    hw_id = None
     filepath = None
     if file_size / 1048576 > 20:
         text = 'File is too big.'
         return text, submission_id, filepath
 
     if mime_type in MIMES and file_name.endswith('.ipynb'):
+        #   TODO: use regular expressions to check if a title is proper.
         if file_name.startswith('hw-'):
             hw_id = int(file_name[3:4])
             if hw_id < 1 and hw_id > 4:
@@ -58,7 +60,8 @@ def download_file(msg, student, conn):
                 return text
 
             student_id, last_name, first_name = student
-            directory = os.path.join(f'{last_name}-{first_name}-'
+            directory = os.path.join(f'notebooks',
+                                     f'{last_name}-{first_name}-'
                                      f'{student_id:03}', f'hw{hw_id}')
             if not os.path.exists(directory):
                 os.makedirs(directory)
@@ -84,7 +87,7 @@ def download_file(msg, student, conn):
                     )
                     SELECT
                         :file_id, :path||'_'||next||'_'||
-                        to_char(:submitted_at, 'YYMONDD-HH:MI:SS')||'.ipynb',
+                        to_char(:submitted_at, 'YYMONDD-HHMISS')||'.ipynb',
                         :student_id, :hw_id, next, :submitted_at
                     FROM ord
                     RETURNING submission_id, ordinal, path
@@ -95,6 +98,7 @@ def download_file(msg, student, conn):
                 with open(filepath, 'wb') as f:
                     f.write(download)
 
+                #   TODO: replace with global var SUCCESS_UPLOAD_TEMPLATE
                 text = f'Received hw#{hw_id} submission#{ordinal} from ' \
                        f'{first_name} {last_name}. Parts of the homework ' \
                        'are graded automatically. I will let you know the ' \
@@ -112,4 +116,4 @@ def download_file(msg, student, conn):
     else:
         text = WRONG_TYPE_TEXT
 
-    return text, submission_id, filepath
+    return text, submission_id, file_id, hw_id, filepath

@@ -5,13 +5,14 @@
 import click
 import logging
 
+from importlib import import_module
 from json import dump
+from os.path import basename, dirname, realpath, splitext
 from redis import Redis
 from requests import Session
 from rq import Connection, Queue, Worker
 from sys import path, stdout
-from os.path import basename, dirname, realpath, splitext
-from importlib import import_module
+from time import sleep
 
 from .models import connect_database
 from .telegram import get_updates
@@ -32,8 +33,8 @@ def main():
               help='Redis Queue (RQ) message broker.')
 def serve(dsn, redis_host):
     logging.info('nla bot started.')
+    conn = try_connect_db(dsn)
     queue = Queue(connection=Redis(host=redis_host))
-    conn = connect_database(dsn)
     sess = Session()
     offset = 0
 
@@ -89,3 +90,17 @@ def imprison(output, pset, filename):
         fout = stdout
 
     dump(result, fout, ensure_ascii=False)
+
+
+def try_connect_db(dsn, nattempts=3):
+    template = 'failed database connection. next attempt in %d seconds.'
+    for i in range(nattempts):
+        try:
+            conn = connect_database(dsn)
+            conn.execute('SELECT 1')
+            return conn
+        except:
+            logging.warn(template, 2**i)
+            sleep(2**i)
+            continue
+    logging.error('failed to connect to database.')

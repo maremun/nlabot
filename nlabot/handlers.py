@@ -29,6 +29,7 @@ def handle_update(update, sess, conn, queue):
     if update.get('message'):
         msg = update['message']
         user_id = msg['from']['id']
+        chat_id = msg['chat']['id']
     else:
         # ignoring other update type for now
         return update['update_id']
@@ -131,13 +132,14 @@ def handle_update(update, sess, conn, queue):
                 queue.enqueue_call(grade, args=(submission_id,
                                                 file_id,
                                                 hw_id,
-                                                filepath))
+                                                filepath,
+                                                chat_id))
 
     else:
         text = ERROR_TEXT
 
     print(text)
-    send_message(msg['chat']['id'], text, sess=sess)
+    send_message(chat_id, text, sess=sess)
 
     return update['update_id']
 

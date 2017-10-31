@@ -51,6 +51,7 @@ class TestChecker(IChecker):
 
     def check_foo(self):
         report = self.make_report('foo')
+        report['pass'] = [0]
 
         if not report['exists']:
             return report
@@ -58,9 +59,7 @@ class TestChecker(IChecker):
         try:
             res = self.nb.foo()
             if res == 42:
-                report['pass'].append(1)
-            else:
-                report['pass'].append(0)
+                report['pass'][0] = 1
         except Exception as e:
             report['exc_info'] = str(e)  # FIXME
         finally:
@@ -68,22 +67,20 @@ class TestChecker(IChecker):
 
     def check_bar(self):
         report = self.make_report('bar')
+        cases = [
+                (2,  4),
+                (3,  9),
+                (5, 25),
+            ]
+        report['pass'] = [0] * len(cases)
 
         if not report['exists']:
             return report
 
         try:
-            cases = [
-                (2,  4),
-                (3,  9),
-                (5, 25),
-            ]
-
-            for argument, result in cases:
+            for i, (argument, result) in enumerate(cases):
                 if result == self.nb.bar(argument):
-                    report['pass'].append(1)
-                else:
-                    report['pass'].append(0)
+                    report['pass'][i] = 1
         except Exception as e:
             report['exc_info'] = str(e)  # FIXME
         finally:
@@ -91,23 +88,20 @@ class TestChecker(IChecker):
 
     def check_zoo(self):
         report = self.make_report('zoo')
+        cases = [
+                (2,  4),
+                (3,  9),
+                (5, 42),
+            ]
+        report['pass'] = [0] * len(cases)
 
         if not report['exists']:
             return report
 
         try:
-            cases = [
-                (2,  4),
-                (3,  9),
-                (5, 42),
-            ]
-
-            for argument, result in cases:
+            for i, (argument, result) in enumerate(cases):
                 if result == self.nb.zoo(argument):
-                    report['pass'].append(1)
-                else:
-                    report['pass'].append(0)
-
+                    report['pass'][i] = 1
         except Exception as e:
             report['exc_info'] = str(e)  # FIXME
         finally:

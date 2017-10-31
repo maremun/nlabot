@@ -1,7 +1,9 @@
 #   encoding: utf-8
 #   checker.py
 
+from io import StringIO
 from collections import Callable
+from traceback import print_exc
 
 
 class IChecker(object):
@@ -61,7 +63,10 @@ class TestChecker(IChecker):
             if res == 42:
                 report['pass'][0] = 1
         except Exception as e:
-            report['exc_info'] = str(e)  # FIXME
+            f = StringIO()
+            print_exc(file=f)
+            report['exc_info'] = f.getvalue()
+            f.close()
         finally:
             return report
 
@@ -82,7 +87,10 @@ class TestChecker(IChecker):
                 if result == self.nb.bar(argument):
                     report['pass'][i] = 1
         except Exception as e:
-            report['exc_info'] = str(e)  # FIXME
+            f = StringIO()
+            print_exc(file=f)
+            report['exc_info'] = f.getvalue()
+            f.close()
         finally:
             return report
 
@@ -103,6 +111,9 @@ class TestChecker(IChecker):
                 if result == self.nb.zoo(argument):
                     report['pass'][i] = 1
         except Exception as e:
-            report['exc_info'] = str(e)  # FIXME
+            f = StringIO()
+            print_exc(file=f)
+            report['exc_info'] = f.getvalue()
+            f.close()
         finally:
             return report

@@ -26,14 +26,17 @@ def grade(submission_id, file_id, hw_id, filepath, chat_id):
         with open(filepath, 'wb') as f:
             f.write(file_to_check)
 
+    logging.info('processing submission #%d', submission_id)
     result = isolate(pset, filepath)
-    logging.info(result)
 
     # calculate a grade
     grades = []
     passed_tests = 0
     total_tests = 0
-    for f in result:
+    for i, f in enumerate(result):
+        logging.info('function %d: %r', i, f)
+        if f.get('exc_info', False):
+            logging.error('%s', f['exc_info'])
         p = sum(f['pass'])
         n = len(f['pass'])
         if p == n:
@@ -73,6 +76,7 @@ def grade(submission_id, file_id, hw_id, filepath, chat_id):
 
     text = grade_reply.format(hw_id, pts, total_pts, passed_tests, total_tests)
     send_message(chat_id, text)
+    logging.info('processing submission #%d finished', submission_id)
 
 
 def isolate(pset, filename):

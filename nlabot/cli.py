@@ -12,12 +12,11 @@ from redis import Redis
 from requests import Session
 from rq import Connection, Queue, Worker
 from sys import path, stdout
-from time import sleep
 
-from .models import connect_database
 from .telegram import get_updates
 from .handlers import handle_update
 from .settings import DB_URI, REDIS_HOST
+from .utils import try_connect_db
 
 
 @click.group(help=__doc__)
@@ -34,6 +33,7 @@ def main():
 def serve(dsn, redis_host):
     logging.info('nla bot started.')
     conn = try_connect_db(dsn)
+    logging.info('connected to database.')
     #   TODO: check if redis is connected before processing updates.
     queue = Queue(connection=Redis(host=redis_host))
     sess = Session()
@@ -91,17 +91,3 @@ def imprison(output, pset, filename):
         fout = stdout
 
     dump(result, fout, ensure_ascii=False)
-
-
-def try_connect_db(dsn, nattempts=3):
-    template = 'failed database connection. next attempt in %d seconds.'
-    for i in range(nattempts):
-        try:
-            conn = connect_database(dsn)
-            conn.execute('SELECT 1')
-            return conn
-        except:
-            logging.warn(template, 2**i)
-            sleep(2**i)
-            continue
-    logging.error('failed to connect to database.')

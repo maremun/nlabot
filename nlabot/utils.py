@@ -1,9 +1,12 @@
 #   encoding: utf-8
 #   utils.py
 
+import logging
 import os
 from datetime import datetime
+from time import sleep
 
+from .models import connect_database
 from .telegram import get_file
 
 WRONG_TITLE_TEXT = "Uh-oh! Something wrong with your submission title. " \
@@ -49,15 +52,17 @@ def download_file(msg, student, conn):
     filepath = None
     if file_size / 1048576 > 20:
         text = 'File is too big.'
-        return text, submission_id, filepath
 
     if mime_type in MIMES and file_name.endswith('.ipynb'):
-        #   TODO: use regular expressions to check if a title is proper.
+        #   TODO: use regular expressions to check if the title is proper.
         if file_name.startswith('hw-'):
-            hw_id = int(file_name[3:4])
-            if hw_id < 1 and hw_id > 4:
-                text = 'Homework number is not valid.'
-                return text
+            if file_name[3:-6] == 'test':
+                hw_id = 0
+                logging.info('testing notebook')
+            else:
+                hw_id = int(file_name[3:4])  # TODO: except if not castable
+                if hw_id < 1 or hw_id > 3:
+                    text = 'Homework number is not valid.'
 
             student_id, last_name, first_name = student
             directory = os.path.join(f'notebooks',
@@ -107,8 +112,8 @@ def download_file(msg, student, conn):
                 conn.commit()
 
             except Exception as e:
-                print(type(e))
-                print(e)
+                logging.error(hw_id)
+                logging.error(type(e), e)
                 conn.rollback()
 
         else:
@@ -117,3 +122,17 @@ def download_file(msg, student, conn):
         text = WRONG_TYPE_TEXT
 
     return text, submission_id, file_id, hw_id, filepath
+
+
+def try_connect_db(dsn, nattempts=5):
+    template = 'failed database connection. next attempt in %d seconds.'
+    for i in range(nattempts):
+        try:
+            conn = connect_database(dsn)
+            conn.execute('SELECT 1')
+            return conn
+        except:
+            logging.warn(template, 2**i)
+            sleep(2**i)
+            continue
+    logging.error('failed to connect to database.')

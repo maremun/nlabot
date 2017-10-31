@@ -78,10 +78,11 @@ def imprison(output, pset, filename):
     except Exception as e:
         logging.error('During homework processing exception was raised.',
                       exc_info=True)
-        exit(1)  # TODO: handle exc properly
+        exit(0)
 
     import nlabot.checkers as checkers
 
+    # TODO: try except, ensure that checkers catch student's errors
     checker = getattr(checkers, f'{pset.capitalize()}Checker')
     result = checker(module)()
 

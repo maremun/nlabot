@@ -11,9 +11,13 @@ from .telegram import get_file, send_message
 from .utils import try_connect_db
 from .settings import DB_URI
 
-grade_reply = 'Hey, your submission to problem set #{:d} has been graded. ' \
+GRADE_REPLY = 'Hey, your submission to problem set #{:d} has been graded. ' \
               'Your grade for coding tasks is {:d}/{:d}. You have passed ' \
               '{:d}/{:d} tests.'
+TIMEOUT_TEXT = 'You submission seems to run too long. This is indicative of ' \
+               'an error. Please revise your submission and try again!'
+SORRY_TEXT = 'There has been some trouble preparing to check you submission' \
+             '. It will be resolved as soon as possible.'
 
 
 def grade(submission_id, file_id, hw_id, filepath, chat_id):
@@ -27,7 +31,15 @@ def grade(submission_id, file_id, hw_id, filepath, chat_id):
             f.write(file_to_check)
 
     logging.info('processing submission #%d', submission_id)
-    result = isolate(pset, filepath)
+    code, result = isolate(pset, filepath)
+
+    if code != 0:
+        if code == 1:
+            send_message(chat_id, SORRY_TEXT)
+        elif code in [2, 3]:
+            send_message(chat_id, TIMEOUT_TEXT)
+        logging.warn(result, submission_id)
+        return
 
     # calculate a grade
     grades = []
@@ -74,9 +86,10 @@ def grade(submission_id, file_id, hw_id, filepath, chat_id):
     student_id = cursor.first()[0]
     logging.info('sending message to student %d', student_id)
 
-    text = grade_reply.format(hw_id, pts, total_pts, passed_tests, total_tests)
+    text = GRADE_REPLY.format(hw_id, pts, total_pts, passed_tests, total_tests)
     send_message(chat_id, text)
-    logging.info('processing submission #%d finished', submission_id)
+    logging.info('finished grading submission #%d.', submission_id)
+    return
 
 
 def isolate(pset, filename):
@@ -98,19 +111,20 @@ def isolate(pset, filename):
 
     try:
         cli.start(container)
-    except Exception as e:  # TODO: correct exception handling
-        logging.error(e)
-        exit(1)
+    except Exception as e:
+        logging.error('failed to start container.', exc_info=True)
+        # TODO: send alert
+        return (1, 'finished grading submission #%d due to container failure.')
 
-    retcode = cli.wait(container, 600)  # TODO: exc handling
+    retcode = cli.wait(container, 600)
 
     if retcode == -1:
-        return 'timeout'
+        return (2, 'finished grading submission#%d due to timeout.')
     elif retcode != 0:
-        return 'fail'
+        return (3, 'finished grading due to some internal problem.')
 
     logging.info('%s', cli.logs(container).decode('utf8'))
     #   TODO: use output file
     json = loads(cli.logs(container, stderr=False).decode('utf8'))
 
-    return json
+    return (0, json)

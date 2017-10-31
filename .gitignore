@@ -10,6 +10,7 @@ __pycache__/
 # ignore data dirs
 data/
 var/
+notebooks/
 
 # ignore configuration files
 nlabot_settings.py

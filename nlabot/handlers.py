@@ -1,27 +1,28 @@
 #   encoding: utf-8
 #   handlers.py
 
-from sqlalchemy.exc import IntegrityError
-from requests import Session
+import logging
 
 from datetime import datetime
+from sqlalchemy.exc import IntegrityError
+
+from .jail import grade
 from .telegram import send_message
 from .utils import check_started, check_registered, download_file
-from .jail import grade
 
+ADDED_STUDENT_TEXT = "Congrats! You have joined the NLA army! SVD bless you!"
 ERROR_TEXT = "Sorry, I don't understand. If you are unregistered, please " \
        "register by sending me a message with your *FirstName " \
        "LastName*. Otherwise, make a submission (your homework)."
-NOT_STARTED_TEXT = "Send /start command to interact with me."
+NAME_FORMAT_TEXT = '*Firstname Lastname*.'
 NOT_ENROLLED_TEXT = "Uh-oh! You seem to be not in the list of enrolled " \
                        "students, please contact TA to correct this."
-ADDED_STUDENT_TEXT = "Congrats! You have joined the NLA army! SVD bless you!"
-taken_error = "Uh-oh! Somebody took you name! Please report this to your TA!"
-STARTED_TEXT = "You've already started interaction with me."
-REGISTERED_TEXT = "You've already registered. To reset use /start command."
+NOT_STARTED_TEXT = "Send /start command to interact with me."
 NOT_REGISTERED_TEXT = "You haven't registered yet. Do it by sending me a " \
                       "message with your *Firstname Lastname*."
-NAME_FORMAT_TEXT = '*Firstname Lastname*.'
+REGISTERED_TEXT = "You've already registered. To reset use /start command."
+STARTED_TEXT = "You've already started interaction with me."
+TAKEN_ERROR = "Uh-oh! Somebody took you name! Please report this to your TA!"
 
 
 def handle_update(update, sess, conn, queue):
@@ -106,13 +107,11 @@ def handle_update(update, sess, conn, queue):
                     text = ADDED_STUDENT_TEXT
 
             except IntegrityError:
-                text = taken_error
+                text = TAKEN_ERROR
                 conn.rollback()
 
             except Exception as e:
-                print(type(e))
-                print(e)
-
+                logging.error(e)
                 text = ERROR_TEXT
                 conn.rollback()
 
@@ -138,14 +137,6 @@ def handle_update(update, sess, conn, queue):
     else:
         text = ERROR_TEXT
 
-    print(text)
     send_message(chat_id, text, sess=sess)
 
     return update['update_id']
-
-
-def respond(user_id):
-    print(f'respond to {user_id}')
-    text = 'fasdf'
-    sess = Session()
-    send_message(user_id, text, sess=sess)

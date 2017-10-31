@@ -54,8 +54,6 @@ def grade(submission_id, file_id, hw_id, filepath, chat_id):
     pts = 0
     pts_per_func = cursor.first()[0]
     for g, p in zip(grades, pts_per_func):
-        logging.info(p)
-        logging.info(g)
         pts += g * p
     total_pts = sum(pts_per_func)
 

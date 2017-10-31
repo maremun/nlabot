@@ -31,8 +31,7 @@ class IChecker(object):
         report = {
             'task': name,
             'exists': self.is_callable(name),
-            'grade': 0,
-            'grades': [],
+            'pass': []
         }
         return report
 
@@ -59,8 +58,9 @@ class TestChecker(IChecker):
         try:
             res = self.nb.foo()
             if res == 42:
-                report['grade'] = 1
-                report['grades'].append(1)
+                report['pass'].append(1)
+            else:
+                report['pass'].append(0)
         except Exception as e:
             report['exc_info'] = str(e)  # FIXME
         finally:
@@ -81,8 +81,9 @@ class TestChecker(IChecker):
 
             for argument, result in cases:
                 if result == self.nb.bar(argument):
-                    report['grade'] += 1
-                    report['grades'].append(1)
+                    report['pass'].append(1)
+                else:
+                    report['pass'].append(0)
         except Exception as e:
             report['exc_info'] = str(e)  # FIXME
         finally:
@@ -103,8 +104,10 @@ class TestChecker(IChecker):
 
             for argument, result in cases:
                 if result == self.nb.zoo(argument):
-                    report['grade'] += 1
-                    report['grades'].append(1)
+                    report['pass'].append(1)
+                else:
+                    report['pass'].append(0)
+
         except Exception as e:
             report['exc_info'] = str(e)  # FIXME
         finally:

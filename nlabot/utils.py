@@ -144,7 +144,7 @@ def check_title(file_name, conn):
         logging.info('testing notebook')
     else:
         try:
-            hw_id = int(file_name[3:4])
+            hw_id = int(file_name[3:-6])
         except ValueError:
             return
 

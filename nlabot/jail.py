@@ -12,8 +12,8 @@ from .utils import try_connect_db
 from .settings import DB_URI
 
 GRADE_REPLY = 'Hey, your submission to problem set #{:d} has been graded. ' \
-              'Your grade for coding tasks is {:d}/{:d}. You have passed ' \
-              '{:d}/{:d} tests.'
+              'Your grade for coding tasks is {:.2f}/{:.2f}. You have ' \
+              'passed {:d}/{:d} tests.'
 TIMEOUT_TEXT = 'You submission seems to run too long. This is indicative of ' \
                'an error. Please revise your submission and try again!'
 SORRY_TEXT = 'There has been some trouble preparing to check you submission' \
@@ -45,7 +45,7 @@ def grade(submission_id, file_id, hw_id, filepath, chat_id):
         logging.warn(result, submission_id)
         return
 
-    # calculate a grade
+    # Calculate a grade
     grades = []
     passed_tests = 0
     total_tests = 0
@@ -63,33 +63,39 @@ def grade(submission_id, file_id, hw_id, filepath, chat_id):
         total_tests += n
 
     conn = try_connect_db(DB_URI)
-    # get points per func in homeworks table and calculate total points for
+    # Get points per func in homeworks table and calculate total points for
     # submission
     row = {'hw_id': hw_id}
     cursor = conn.execute("""
         SELECT pts_per_func FROM homeworks
         WHERE hw_id = :hw_id
     """, row)
-    pts = 0
     pts_per_func = cursor.first()[0]
+
+    pts_seq = []
     for g, p in zip(grades, pts_per_func):
-        pts += g * p
+        pts_seq.append(g * p)
     total_pts = sum(pts_per_func)
 
-    # update grade in db
-    row = {'grade': pts, 'submission_id': submission_id}
+    # Update grade in db
+    # Penalize while sending message/building reports
+    row = {'grades': pts_seq, 'submission_id': submission_id}
     cursor = conn.execute("""
         UPDATE submissions
-        SET grade = :grade
+        SET grades = :grades,
+            grade = (SELECT SUM(s) FROM UNNEST(:grades) s)
         WHERE submission_id = :submission_id
-        RETURNING student_id
+        RETURNING student_id, expired
     """, row)
     conn.commit()
-    logging.info('updated grade for submission %d, inserted value %d',
-                 submission_id, pts)
-    student_id = cursor.first()[0]
+    logging.info('updated grade for submission %d, inserted value %r',
+                 submission_id, pts_seq)
+    student_id, expired = cursor.first()
     logging.info('sending message to student %d', student_id)
 
+    pts = sum(pts_seq)
+    if expired:
+        pts *= 0.5
     text = GRADE_REPLY.format(hw_id, pts, total_pts, passed_tests, total_tests)
     send_message(chat_id, text)
     logging.info('finished grading submission #%d.', submission_id)
@@ -118,24 +124,23 @@ def isolate(pset, filename):
     except Exception as e:
         logging.error('failed to start container.', exc_info=True)
         # TODO: send alert
-        return (1, 'finished grading submission #%d due to container failure.')
+        return 1, 'finished grading submission #%d due to container failure.'
 
     retcode = cli.wait(container, 600)  # 10 minutes to grade
     logging.info('retcode is %d', retcode)
     logging.info('%s', cli.logs(container).decode('utf8'))
 
     if retcode == -1:
-        return (2, 'finished grading submission #%d due to timeout.')
+        return 2, 'finished grading submission #%d due to timeout.'
     elif retcode != 0:
-        return (3, 'finished grading submission #%d due to some internal '
-                'problem.')
+        return 3, 'finished grading submission #%d due to some internal ' \
+                  'problem.'
 
     logs = cli.logs(container, stderr=False).decode('utf8')
     if logs == '':
         logging.warn('stdout is empty.')
-        return (4, 'finished grading submission #%d due to a problem in '
-                'the notebook.')
+        return 4, 'finished grading submission #%d due to a problem in ' \
+                  'the notebook.'
 
-    #   TODO: use output file
     json = loads(logs)
-    return (0, json)
+    return 0, json

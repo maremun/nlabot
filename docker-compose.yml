@@ -33,6 +33,7 @@ services:
         - './notebooks:/nlabot/notebooks'
         - '/var/run/docker.sock:/var/run/docker.sock'
         - './nlabot_settings.py:/nlabot/nlabot_settings.py'
+        - '/etc/localtime:/etc/localtime'
     # this docker image is run from ta and is never used manually
     cell:
         build:
@@ -41,3 +42,4 @@ services:
         command: imprison
         volumes:
         - './notebooks:/nlabot/notebooks'
+        - '/etc/localtime:/etc/localtime'

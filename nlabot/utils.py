@@ -125,7 +125,7 @@ def download_file(msg, student, conn):
 
 
 def try_connect_db(dsn, nattempts=5):
-    template = 'failed database connection. next attempt in %d seconds.'
+    template = 'failed database connection. next attempt in %d second(s).'
     for i in range(nattempts):
         try:
             conn = connect_database(dsn)

@@ -18,6 +18,8 @@ TIMEOUT_TEXT = 'You submission seems to run too long. This is indicative of ' \
                'an error. Please revise your submission and try again!'
 SORRY_TEXT = 'There has been some trouble preparing to check you submission' \
              '. It will be resolved as soon as possible.'
+PROBLEM_TEXT = 'There has been a trouble with your submission. Make sure it ' \
+               'is a proper Jupyter notebook and resubmit.'
 
 
 def grade(submission_id, file_id, hw_id, filepath, chat_id):
@@ -34,10 +36,12 @@ def grade(submission_id, file_id, hw_id, filepath, chat_id):
     code, result = isolate(pset, filepath)
 
     if code != 0:
-        if code == 1:
+        if code in [1, 3]:
             send_message(chat_id, SORRY_TEXT)
-        elif code in [2, 3]:
+        elif code == 2:
             send_message(chat_id, TIMEOUT_TEXT)
+        elif code == 4:
+            send_message(chat_id, PROBLEM_TEXT)
         logging.warn(result, submission_id)
         return
 
@@ -116,15 +120,22 @@ def isolate(pset, filename):
         # TODO: send alert
         return (1, 'finished grading submission #%d due to container failure.')
 
-    retcode = cli.wait(container, 600)
+    retcode = cli.wait(container, 600)  # 10 minutes to grade
+    logging.info('retcode is %d', retcode)
+    logging.info('%s', cli.logs(container).decode('utf8'))
 
     if retcode == -1:
-        return (2, 'finished grading submission#%d due to timeout.')
+        return (2, 'finished grading submission #%d due to timeout.')
     elif retcode != 0:
-        return (3, 'finished grading due to some internal problem.')
+        return (3, 'finished grading submission #%d due to some internal '
+                'problem.')
 
-    logging.info('%s', cli.logs(container).decode('utf8'))
+    logs = cli.logs(container, stderr=False).decode('utf8')
+    if logs == '':
+        logging.warn('stdout is empty.')
+        return (4, 'finished grading submission #%d due to a problem in '
+                'the notebook.')
+
     #   TODO: use output file
-    json = loads(cli.logs(container, stderr=False).decode('utf8'))
-
+    json = loads(logs)
     return (0, json)

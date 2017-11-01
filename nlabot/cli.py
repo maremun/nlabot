@@ -69,22 +69,25 @@ def work(dsn, redis_host):
 @click.argument('pset', type=click.Choice(['test']))
 @click.argument('filename', type=click.Path(exists=True))
 def imprison(output, pset, filename):
-    logging.info('cell created for %s.', filename)
+    logging.info('CELL: cell created for %s.', filename)
     path.append(dirname(realpath(filename)))
 
     try:
         from .nbloader import NotebookFinder  # noqa
         module = import_module(splitext(basename(filename))[0])
     except Exception as e:
-        logging.error('During homework processing exception was raised.',
-                      exc_info=True)
+        logging.error('CELL: during homework processing an exception was '
+                      'raised.', exc_info=True)
         exit(0)
 
     import nlabot.checkers as checkers
 
-    # TODO: try except, ensure that checkers catch student's errors
-    checker = getattr(checkers, f'{pset.capitalize()}Checker')
-    result = checker(module)()
+    try:
+        checker = getattr(checkers, f'{pset.capitalize()}Checker')
+        result = checker(module)()
+    except Exception as e:
+        logging.error('CELL: checker failed.', exc_info=True)
+        exit(1)
 
     if output:
         fout = open(output, 'w')

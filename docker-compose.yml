@@ -38,6 +38,7 @@ services:
         - '/var/run/docker.sock:/var/run/docker.sock'
         - './nlabot_settings.py:/nlabot/nlabot_settings.py'
         - '/etc/localtime:/etc/localtime'
+        - '/tmp:/tmp'
     # this docker image is run from ta and is never used manually
     cell:
         build:

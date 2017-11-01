@@ -4,12 +4,12 @@
 import logging
 
 from docker import APIClient
-from json import loads
-from os.path import realpath, exists
+from json import JSONDecodeError, loads
+from os.path import basename, exists, join
 
 from .telegram import get_file, send_message
 from .utils import try_connect_db
-from .settings import DB_URI
+from .settings import DB_URI, HOST_PATH
 
 GRADE_REPLY = 'Hey, your submission to problem set #{:d} has been graded. ' \
               'Your grade for coding tasks is {:.2f}/{:.2f}. You have ' \
@@ -103,18 +103,25 @@ def grade(submission_id, file_id, hw_id, filepath, chat_id):
 
 
 def isolate(pset, filename):
-    notebook = realpath(filename)
-    notebook = '/Users/maremun/projects/nlabot/' + filename
+    notebook = join(HOST_PATH, filename)
+    result = join('/tmp', basename(filename) + '.txt')
+    open(result, 'w').close()
+
     cli = APIClient()
     container = cli.create_container(
         image='nlabot_cell',
-        command=['imprison', pset, 'notebook.ipynb'],
+        command=['imprison', '-o', 'result.txt', pset, 'notebook.ipynb'],
         volumes=['/nlabot/notebook.ipynb'],
+        network_disabled=True,
         host_config=cli.create_host_config(binds={
             notebook: {
                 'bind': '/nlabot/notebook.ipynb',
                 'mode': 'rw',
             },
+            result: {
+                'bind': '/nlabot/result.txt',
+                'mode': 'rw',
+            }
         })
     )
     logging.info('container id is %s', container['Id'])
@@ -136,11 +143,17 @@ def isolate(pset, filename):
         return 3, 'finished grading submission #%d due to some internal ' \
                   'problem.'
 
-    logs = cli.logs(container, stderr=False).decode('utf8')
-    if logs == '':
+    with open(result) as f:
+        content = f.read()
+
+    if content == '':
         logging.warn('stdout is empty.')
         return 4, 'finished grading submission #%d due to a problem in ' \
                   'the notebook.'
 
-    json = loads(logs)
-    return 0, json
+    try:
+        return 0, loads(content)
+    except JSONDecodeError as e:
+        logging.error('could not decode json', exc_info=True)
+        return 3, 'finished grading submission #%d due to some internal ' \
+                  'problem.'

@@ -15,6 +15,9 @@ API_DOWNLOAD_URL = 'https://api.telegram.org/file/bot{token}/{file_path}'
 DB_URI = 'postgres://nlabot@127.0.0.1/nlabot'
 REDIS_HOST = '127.0.0.1'
 
+# Other settings
+HOST_PATH = None
+
 # override default settings(ignore F401 and F403 flake8 errors)
 try:
     from nlabot_settings import *  # noqa

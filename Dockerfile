@@ -19,6 +19,10 @@ COPY requirements.txt .
 
 RUN pip install -r requirements.txt
 
+COPY packages.txt .
+
+RUN pip install -r packages.txt
+
 COPY . .
 
 RUN pip install -e .

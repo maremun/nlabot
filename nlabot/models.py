@@ -2,8 +2,8 @@
 #   models.py
 
 from datetime import datetime
-from sqlalchemy import Column, DateTime, Integer, String, ForeignKey, \
-        Float, create_engine, UniqueConstraint, ARRAY
+from sqlalchemy import ARRAY, Boolean, Column, DateTime, Float, ForeignKey, \
+    Integer, String, UniqueConstraint, create_engine
 from sqlalchemy.ext.declarative import as_declarative
 from sqlalchemy.dialects.postgresql import ENUM
 from sqlalchemy.orm import scoped_session, sessionmaker, relationship
@@ -54,6 +54,7 @@ class Student(Base):
     student_id = Column(Integer, primary_key=True)
     first_name = Column(String(64), nullable=False)
     last_name = Column(String(64), nullable=False)
+    # TODO: change to array of grades
     avg_grade = Column(Float(32), nullable=True)
 
     users = relationship('User', back_populates='student',
@@ -79,11 +80,13 @@ class Submission(Base):
     # student submitted a work, homework's serial number, submission number
     # (e.g. Student1 submitted his 3rd attempt at solution to hw #3.
     student_id = Column(ForeignKey('students.student_id'))
-    hw_id = Column(ForeignKey('homeworks.hw_id'))  # Integer, nullable=False)
+    hw_id = Column(ForeignKey('homeworks.hw_id'))
     ordinal = Column(Integer, nullable=False)  # Submission number
     submitted_at = Column(DateTime, default=datetime.now(), nullable=False,
                           server_default=text('NOW()'))
     grade = Column(Float(32), nullable=True)  # Grade
+    grades = Column(ARRAY(Float(32)), nullable=True)  # Grades
+    expired = Column(Boolean, nullable=False)
 
     student = relationship('Student', back_populates='submissions')
     homework = relationship('Homework', back_populates='submissions')
@@ -99,9 +102,8 @@ class Homework(Base):
     __tablename__ = 'homeworks'
 
     hw_id = Column(Integer, primary_key=True)
-    total_pts = Column(Integer, nullable=False)
-    n_func = Column(Integer, nullable=False)
     pts_per_func = Column(ARRAY(Integer), nullable=False)
+    deadline = Column(DateTime, nullable=False)
 
     submissions = relationship('Submission', back_populates='homework',
                                cascade='all, delete, delete-orphan')

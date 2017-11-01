@@ -2,6 +2,10 @@ FROM base/archlinux:latest
 
 COPY etc/ /etc/
 
+ENV TZ=Europe/Moscow
+
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
 ENV LANG=ru_RU.UTF-8 LANGUAGE=en_US.UTF-8
 
 RUN locale-gen && \

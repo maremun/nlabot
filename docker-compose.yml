@@ -6,10 +6,13 @@ services:
         - '5432:5432'
         volumes:
         - './var:/var/lib/postgresql/data'
+        - '/etc/localtime:/etc/localtime'
     redis:
         image: 'redis:latest'
         ports:
         - '6379:6379'
+        volumes:
+        - '/etc/localtime:/etc/localtime'
     bot:
         build:
             context: .
@@ -21,6 +24,7 @@ services:
         volumes:
         - './notebooks:/nlabot/notebooks'
         - './nlabot_settings.py:/nlabot/nlabot_settings.py'
+        - '/etc/localtime:/etc/localtime'
     ta:
         build:
             context: .

@@ -54,16 +54,8 @@ def download_file(msg, student, conn):
         text = 'File is too big.'
 
     if mime_type in MIMES and file_name.endswith('.ipynb'):
-        #   TODO: use regular expressions to check if the title is proper.
-        if file_name.startswith('hw-'):
-            if file_name[3:-6] == 'test':
-                hw_id = 0
-                logging.info('testing notebook')
-            else:
-                hw_id = int(file_name[3:4])  # TODO: except if not castable
-                if hw_id < 1 or hw_id > 3:
-                    text = 'Homework number is not valid.'
-
+        hw_id = check_title(file_name, conn)
+        if hw_id is not None:
             student_id, last_name, first_name = student
             directory = os.path.join(f'notebooks',
                                      f'{last_name}-{first_name}-'
@@ -71,9 +63,7 @@ def download_file(msg, student, conn):
             if not os.path.exists(directory):
                 os.makedirs(directory)
             download = get_file(file_id)
-            time = datetime.fromtimestamp(
-                       msg['date']
-                   )
+            time = datetime.fromtimestamp(msg['date'])
             path = os.path.join(f'{directory}',
                                 f'{last_name}-{first_name}-'
                                 f'{file_name[:4]}')
@@ -86,15 +76,23 @@ def download_file(msg, student, conn):
                         SELECT COALESCE(MAX(ordinal), 0) + 1 AS next
                         FROM submissions
                         WHERE student_id = :student_id AND hw_id = :hw_id
-                        LIMIT 1)
+                        LIMIT 1
+                    ), deadline AS (
+                        SELECT deadline < :submitted_at AS expired
+                        FROM homeworks
+                        WHERE hw_id = :hw_id
+                        LIMIT 1
+                    )
                     INSERT INTO submissions (
-                        file_id, path, student_id, hw_id, ordinal, submitted_at
+                        file_id, path, student_id, hw_id, ordinal,
+                        submitted_at, expired
                     )
                     SELECT
                         :file_id, :path||'_'||next||'_'||
                         to_char(:submitted_at, 'YYMONDD-HHMISS')||'.ipynb',
-                        :student_id, :hw_id, next, :submitted_at
-                    FROM ord
+                        :student_id, :hw_id, next, :submitted_at,
+                        expired
+                    FROM ord, deadline
                     RETURNING submission_id, ordinal, path
                 """, row)
 
@@ -136,3 +134,28 @@ def try_connect_db(dsn, nattempts=5):
             sleep(2**i)
             continue
     logging.error('failed to connect to database.')
+
+
+def check_title(file_name, conn):
+    if not file_name.startswith('hw-'):
+        return
+    if file_name[3:-6] == 'test':
+        hw_id = 0
+        logging.info('testing notebook')
+    else:
+        try:
+            hw_id = int(file_name[3:4])
+        except ValueError:
+            return
+
+        cursor = conn.execute("""
+            SELECT EXISTS (
+                SELECT *
+                FROM homeworks
+                WHERE hw_id = :hw_id)
+        """, {'hw_id': hw_id})
+        hw_exists = cursor.fetchone()[0]
+        if not hw_exists:
+            return
+
+    return hw_id

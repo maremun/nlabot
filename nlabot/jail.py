@@ -79,24 +79,34 @@ def grade(submission_id, file_id, hw_id, filepath, chat_id):
 
     # Update grade in db
     # Penalize while sending message/building reports
-    row = {'grades': pts_seq, 'submission_id': submission_id}
+    row = {'grades': pts_seq, 'submission_id': submission_id,
+           'hw_id': hw_id+1}
+    # TODO: Fix to pick the best grade among submissions.
     cursor = conn.execute("""
-        UPDATE submissions
-        SET grades = :grades,
-            grade = (SELECT SUM(s) FROM UNNEST(:grades) s)
-        WHERE submission_id = :submission_id
-        RETURNING student_id, expired
+        WITH update_sub AS (
+            UPDATE submissions
+            SET grades = :grades,
+                grade = (SELECT SUM(s) FROM UNNEST(:grades) s)
+            WHERE submission_id = :submission_id
+            RETURNING student_id, expired
+        )
+        UPDATE students
+        SET grades[:hw_id] = (
+            CASE (SELECT expired from update_sub)
+            WHEN TRUE THEN (SELECT SUM(s) FROM UNNEST(:grades) s) / 2
+            WHEN FALSE THEN (SELECT SUM(s) FROM UNNEST(:grades) s)
+            END)
+        WHERE student_id = (SELECT student_id FROM update_sub)
+        RETURNING student_id, grades[:hw_id]
     """, row)
     conn.commit()
     logging.info('updated grade for submission %d, inserted value %r',
                  submission_id, pts_seq)
-    student_id, expired = cursor.first()
+    student_id, grade = cursor.first()
     logging.info('sending message to student %d', student_id)
 
-    pts = sum(pts_seq)
-    if expired:
-        pts *= 0.5
-    text = GRADE_REPLY.format(hw_id, pts, total_pts, passed_tests, total_tests)
+    text = GRADE_REPLY.format(hw_id, grade, total_pts,
+                              passed_tests, total_tests)
     send_message(chat_id, text)
     logging.info('finished grading submission #%d.', submission_id)
     return

@@ -10,7 +10,9 @@ from .jail import grade
 from .telegram import send_message
 from .utils import check_started, check_registered, download_file
 
-ADDED_STUDENT_TEXT = "Congrats! You have joined the NLA army! SVD bless you!"
+ADDED_STUDENT_TEXT = "Congrats! You have joined the NLA army! SVD bless you!" \
+                     " Please submit your homework solution by sending an " \
+                     "*.ipynb* file."
 DB_ERROR_TEXT = "Sorry, there has been an internal problem. Please report " \
                 "this to TA."
 ERROR_TEXT = "Sorry, I don't understand. If you are unregistered, please " \

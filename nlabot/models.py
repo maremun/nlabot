@@ -54,8 +54,7 @@ class Student(Base):
     student_id = Column(Integer, primary_key=True)
     first_name = Column(String(64), nullable=False)
     last_name = Column(String(64), nullable=False)
-    # TODO: change to array of grades
-    avg_grade = Column(Float(32), nullable=True)
+    grades = Column(ARRAY(Float(32)), default=[0, 0, 0], nullable=False)
 
     users = relationship('User', back_populates='student',
                          cascade='all, delete, delete-orphan')

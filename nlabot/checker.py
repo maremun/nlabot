@@ -1,8 +1,9 @@
 #   encoding: utf-8
 #   checker.py
 
-from io import StringIO
 from collections import Callable
+from functools import wraps
+from io import StringIO
 from traceback import print_exc
 
 
@@ -51,69 +52,48 @@ class TestChecker(IChecker):
         ]
         return results
 
+    foo_cases = [(None, 42)]
+    bar_cases = [(2, 4), (3, 9), (5, 25)]
+    zoo_cases = [(2, 4), (3, 9), (4, 42)]
+
+    def check_dec(name, cases=None):
+        def wrap(f):
+            @wraps(f)
+            def wrapper(*args, **kwargs):
+                report = args[0].make_report(name)
+                if cases is None:
+                    report['pass'] = [0]  # no cases provided
+                else:
+                    report['pass'] = [0] * len(cases)
+                if not report['exists']:
+                    return report
+                try:
+                    for i, (argument, result) in enumerate(cases):
+                        if argument is None:
+                            if result == f(*args, **kwargs)():
+                                report['pass'][i] = 1
+                        else:
+                            if result == f(*args, **kwargs)(argument):
+                                report['pass'][i] = 1
+                except Exception as e:
+                    fout = StringIO()
+                    print_exc(file=fout)
+                    report['exc_info'] = fout.getvalue()
+                    fout.close()
+                finally:
+                    return report
+
+            return wrapper
+        return wrap
+
+    @check_dec('foo', foo_cases)
     def check_foo(self):
-        report = self.make_report('foo')
-        report['pass'] = [0]
+        return self.nb.foo
 
-        if not report['exists']:
-            return report
-
-        try:
-            res = self.nb.foo()
-            if res == 42:
-                report['pass'][0] = 1
-        except Exception as e:
-            f = StringIO()
-            print_exc(file=f)
-            report['exc_info'] = f.getvalue()
-            f.close()
-        finally:
-            return report
-
+    @check_dec('bar', bar_cases)
     def check_bar(self):
-        report = self.make_report('bar')
-        cases = [
-                (2,  4),
-                (3,  9),
-                (5, 25),
-            ]
-        report['pass'] = [0] * len(cases)
+        return self.nb.bar
 
-        if not report['exists']:
-            return report
-
-        try:
-            for i, (argument, result) in enumerate(cases):
-                if result == self.nb.bar(argument):
-                    report['pass'][i] = 1
-        except Exception as e:
-            f = StringIO()
-            print_exc(file=f)
-            report['exc_info'] = f.getvalue()
-            f.close()
-        finally:
-            return report
-
+    @check_dec('zoo', zoo_cases)
     def check_zoo(self):
-        report = self.make_report('zoo')
-        cases = [
-                (2,  4),
-                (3,  9),
-                (5, 42),
-            ]
-        report['pass'] = [0] * len(cases)
-
-        if not report['exists']:
-            return report
-
-        try:
-            for i, (argument, result) in enumerate(cases):
-                if result == self.nb.zoo(argument):
-                    report['pass'][i] = 1
-        except Exception as e:
-            f = StringIO()
-            print_exc(file=f)
-            report['exc_info'] = f.getvalue()
-            f.close()
-        finally:
-            return report
+        return self.nb.zoo

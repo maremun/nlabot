@@ -133,7 +133,7 @@ def isolate(pset, filename):
         # TODO: send alert
         return 1, 'finished grading submission #%d due to container failure.'
 
-    retcode = cli.wait(container, 600)  # 10 minutes to grade
+    retcode = cli.wait(container, 1200)  # 20 minutes to grade
     logging.info('retcode is %d', retcode)
     logging.info('%s', cli.logs(container).decode('utf8'))
 

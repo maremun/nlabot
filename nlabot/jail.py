@@ -122,7 +122,7 @@ def isolate(pset, filename):
                 'bind': '/nlabot/result.txt',
                 'mode': 'rw',
             }
-        })
+        }, cpu_period=50000, cpu_quota=100000, mem_limit='4g')
     )
     logging.info('container id is %s', container['Id'])
 

@@ -5,13 +5,14 @@ services:
         ports:
         - '5432:5432'
         volumes:
-        - './var:/var/lib/postgresql/data'
+        - './var/postgres:/var/lib/postgresql/data'
         - '/etc/localtime:/etc/localtime'
     redis:
         image: 'redis:latest'
         ports:
         - '6379:6379'
         volumes:
+        - './var/redis:/data'
         - '/etc/localtime:/etc/localtime'
     bot:
         build:

@@ -25,6 +25,7 @@ services:
         - './notebooks:/nlabot/notebooks'
         - './nlabot_settings.py:/nlabot/nlabot_settings.py'
         - '/etc/localtime:/etc/localtime'
+        restart: always
     ta:
         build:
             context: .
@@ -39,6 +40,7 @@ services:
         - './nlabot_settings.py:/nlabot/nlabot_settings.py'
         - '/etc/localtime:/etc/localtime'
         - '/tmp:/tmp'
+        restart: on-failure
     # this docker image is run from ta and is never used manually
     cell:
         build:

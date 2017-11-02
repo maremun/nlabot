@@ -110,8 +110,9 @@ def download_file(msg, student, conn):
                 conn.commit()
 
             except Exception as e:
-                logging.error(hw_id)
-                logging.error(type(e), e)
+                logging.error('%d', hw_id)
+                logging.error('%s', type(e))
+                logging.error('%s', e)
                 conn.rollback()
 
         else:

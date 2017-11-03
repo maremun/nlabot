@@ -54,6 +54,8 @@ class Student(Base):
     student_id = Column(Integer, primary_key=True)
     first_name = Column(String(64), nullable=False)
     last_name = Column(String(64), nullable=False)
+    # the account to identify a student
+    account = Column(String(128), nullable=False)
     grades = Column(ARRAY(Float(32)), default=[0, 0, 0], nullable=False)
 
     users = relationship('User', back_populates='student',

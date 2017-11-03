@@ -16,9 +16,7 @@ services:
         - './var/redis:/data'
         - '/etc/localtime:/etc/localtime'
     bot:
-        build:
-            context: .
-            dockerfile: Dockerfile
+        build: .
         command: serve
         links:
         - 'postgres'
@@ -29,9 +27,7 @@ services:
         - '/etc/localtime:/etc/localtime'
         restart: always
     ta:
-        build:
-            context: .
-            dockerfile: Dockerfile
+        build: .
         command: work
         links:
         - 'postgres'
@@ -45,9 +41,7 @@ services:
         restart: on-failure
     # this docker image is run from ta and is never used manually
     cell:
-        build:
-            context: .
-            dockerfile: Dockerfile
+        build: .
         command: imprison
         volumes:
         - './notebooks:/nlabot/notebooks'

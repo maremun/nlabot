@@ -9,6 +9,9 @@ from time import sleep
 from .models import connect_database
 from .telegram import get_file
 
+SUCCESS_UPLOAD_TEXT = 'Received hw #{:d} submission #{:d} from {:s} ' \
+                          '{:s}. Coding parts of the homework are graded ' \
+                          'automatically. I will let you know the grade soon.'
 WRONG_TITLE_TEXT = "Uh-oh! Something wrong with your submission title. " \
                    "Please rename it as hw-_N_, where _N_ is the number of " \
                    "the homework you are trying to submit."
@@ -102,11 +105,8 @@ def download_file(msg, student, conn):
                     f.write(download)
 
                 #   TODO: replace with global var SUCCESS_UPLOAD_TEMPLATE
-                text = f'Received hw#{hw_id} submission#{ordinal} from ' \
-                       f'{first_name} {last_name}. Parts of the homework ' \
-                       'are graded automatically. I will let you know the ' \
-                       'grade soon.'
-
+                text = SUCCESS_UPLOAD_TEXT.format(hw_id, ordinal,
+                                                  first_name, last_name)
                 conn.commit()
 
             except Exception as e:

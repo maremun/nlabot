@@ -11,9 +11,9 @@ from .telegram import get_file, send_message
 from .utils import try_connect_db
 from .settings import DB_URI, HOST_PATH
 
-GRADE_REPLY = 'Hey, your submission to problem set #{:d} has been graded. ' \
-              'Your grade for coding tasks is {:.2f}/{:.2f}. You have ' \
-              'passed {:d}/{:d} tests.'
+GRADE_REPLY = 'Hey, your submission #{:d} to problem set #{:d} has been ' \
+              'graded. Your grade for coding tasks is {:.2f}/{:.2f}. You ' \
+              'have passed {:d}/{:d} tests.'
 TIMEOUT_TEXT = 'You submission seems to run too long. This is indicative of ' \
                'an error. Please revise your submission and try again!'
 SORRY_TEXT = 'There has been some trouble preparing to check you submission' \
@@ -105,7 +105,7 @@ def grade(submission_id, file_id, hw_id, filepath, chat_id):
     student_id, grade = cursor.first()
     logging.info('sending message to student %d', student_id)
 
-    text = GRADE_REPLY.format(hw_id, grade, total_pts,
+    text = GRADE_REPLY.format(hw_id, submission_id, grade, total_pts,
                               passed_tests, total_tests)
     send_message(chat_id, text)
     logging.info('finished grading submission #%d.', submission_id)

@@ -93,7 +93,7 @@ def grade(submission_id, file_id, hw_id, filepath, chat_id):
         UPDATE students
         SET grades[:hw_id] = (
             CASE (SELECT expired from update_sub)
-            WHEN TRUE THEN (SELECT SUM(s) FROM UNNEST(:grades) s) / 2
+            WHEN TRUE THEN (SELECT SUM(s) FROM UNNEST(:grades) s) / 2.
             WHEN FALSE THEN (SELECT SUM(s) FROM UNNEST(:grades) s)
             END)
         WHERE student_id = (SELECT student_id FROM update_sub)

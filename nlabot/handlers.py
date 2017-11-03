@@ -97,7 +97,7 @@ def handle_update(update, sess, conn, queue):
                     send_message(msg['chat']['id'], text, sess=sess)
                     return update['update_id']
 
-                account = msg['text'].strip()
+                account = msg['text'].strip().lower()
                 row = {'user_id': user_id, 'account': account}
                 try:
                     cursor = conn.execute("""

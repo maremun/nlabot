@@ -129,6 +129,7 @@ def try_connect_db(dsn, nattempts=5):
         try:
             conn = connect_database(dsn)
             conn.execute('SELECT 1')
+            logging.info('connected to database.')
             return conn
         except:
             logging.warn(template, 2**i)

@@ -33,7 +33,6 @@ def main():
 def serve(dsn, redis_host):
     logging.info('nla bot started.')
     conn = try_connect_db(dsn)
-    logging.info('connected to database.')
     #   TODO: check if redis is connected before processing updates.
     queue = Queue(connection=Redis(host=redis_host))
     sess = Session()

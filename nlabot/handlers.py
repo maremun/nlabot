@@ -16,17 +16,19 @@ ADDED_STUDENT_TEXT = "Congrats! You have joined the NLA army! SVD bless you!" \
 DB_ERROR_TEXT = "Sorry, there has been an internal problem. Please report " \
                 "this to TA."
 ERROR_TEXT = "Sorry, I don't understand. If you are unregistered, please " \
-             "register by sending me a message with your *FirstName " \
-             "LastName*. Otherwise, make a submission (your homework)."
-NAME_FORMAT_TEXT = '*Firstname Lastname*.'
+             "register by sending me a message with your e-mail (the one " \
+             "you used to register on Piazza). Otherwise, make a submission " \
+             "(your homework)."
+ACCOUNT_FORMAT_TEXT = "Please send me your e-mail (the one you used to " \
+                   "register on Piazza.)"
 NOT_ENROLLED_TEXT = "Uh-oh! You seem to be not in the list of enrolled " \
                     "students, please contact TA to correct this."
 NOT_STARTED_TEXT = "Send /start command to interact with me."
 NOT_REGISTERED_TEXT = "You haven't registered yet. Do it by sending me a " \
-                      "message with your *Firstname Lastname* (as they " \
-                      "appear in Canvas)."
+                      "message with your e-mail (the one you used to " \
+                      "register on Piazza)."
 ON_START_TEXT = "Hello! Please register to submit your homeworks. " \
-                "Send your *FirstName LastName* (as they appear in Canvas)."
+                "Send an e-mail you used to register on Piazza."
 REGISTERED_TEXT = "You've already registered. To reset use /start command."
 RESET_TEXT = "Resetted your registration."
 STARTED_TEXT = "You've already started interaction with me."
@@ -88,23 +90,22 @@ def handle_update(update, sess, conn, queue):
 
             if not check_registered(user_id, conn)[0]:
                 # try register
-                split = msg['text'].strip().split(maxsplit=1)
+
+                split = msg['text'].strip().split('@', maxsplit=1)
                 if len(split) != 2:
-                    text = NAME_FORMAT_TEXT
+                    text = ACCOUNT_FORMAT_TEXT
                     send_message(msg['chat']['id'], text, sess=sess)
                     return update['update_id']
 
-                first_name, last_name = split
-                row = {'user_id': user_id, 'first_name': first_name,
-                       'last_name': last_name}
+                account = msg['text'].strip()
+                row = {'user_id': user_id, 'account': account}
                 try:
                     cursor = conn.execute("""
                         UPDATE users
                         SET state = 'registered',
                             student_id = students.student_id
                         FROM students
-                        WHERE user_id = :user_id AND students.first_name =
-                        :first_name AND students.last_name = :last_name
+                        WHERE user_id = :user_id AND account = :account
                         RETURNING students.student_id;
                     """, row)
                     conn.commit()

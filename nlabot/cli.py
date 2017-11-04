@@ -16,7 +16,7 @@ from sys import path, stdout
 from .telegram import get_updates
 from .handlers import handle_update
 from .settings import DB_URI, REDIS_HOST
-from .utils import try_connect_db
+from .utils import try_connect_db, patch_magic
 
 
 @click.group(help=__doc__)
@@ -69,6 +69,9 @@ def work(dsn, redis_host):
 @click.argument('filename', type=click.Path(exists=True))
 def imprison(output, pset, filename):
     logging.info('CELL: cell created for %s.', filename)
+    logging.info('CELL: patch ipython matplotlib magic')
+
+    patch_magic()
     path.append(dirname(realpath(filename)))
 
     try:

@@ -42,7 +42,7 @@ services:
     # this docker image is run from ta and is never used manually
     cell:
         build: .
-        command: imprison
+        command: imprison test notebook.ipynb
         volumes:
-        - './notebooks:/nlabot/notebooks'
+        - './notebooks/testnotebook.ipynb:/nlabot/notebook.ipynb'
         - '/etc/localtime:/etc/localtime'

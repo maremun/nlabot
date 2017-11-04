@@ -161,3 +161,25 @@ def check_title(file_name, conn):
             return
 
     return hw_id
+
+
+def patch_magic():
+    """Patch matplotlib magic with stub function and set default matplotlib
+    backend as `agg` which is suitable for non-interactive mode.
+    """
+
+    def stub(self, *args, **kwargs):
+        """This function is a stub to avoid issue with interactivity in
+        non-interactive mode that arises due to using of `%matplotlib` magic.
+        """
+        pass
+
+    try:
+        from IPython.core.magics.pylab import PylabMagics
+        PylabMagics.matplotlib = stub
+        from matplotlib import use
+        use('agg')
+    except Exception as e:
+        logging.error('CELL: during ipython magic patching an exception was '
+                      'raised', exc_info=True)
+        exit(1)

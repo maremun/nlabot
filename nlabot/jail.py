@@ -105,7 +105,7 @@ def grade(submission_id, file_id, hw_id, filepath, chat_id):
     student_id, grade = cursor.first()
     logging.info('sending message to student %d', student_id)
 
-    text = GRADE_REPLY.format(hw_id, submission_id, grade, total_pts,
+    text = GRADE_REPLY.format(submission_id, hw_id, grade, total_pts,
                               passed_tests, total_tests)
     send_message(chat_id, text)
     logging.info('finished grading submission #%d.', submission_id)

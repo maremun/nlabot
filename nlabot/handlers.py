@@ -141,10 +141,11 @@ def handle_update(update, sess, conn, queue):
             text = NOT_REGISTERED_TEXT
         else:
             d_params = download_file(msg, student, conn)
-            text, submission_id, file_id, hw_id, filepath = d_params
+            text, submission_id, ordinal, file_id, hw_id, filepath = d_params
             if filepath is not None:
                 queue.enqueue_call(grade, timeout='21m', result_ttl='168h',
                                    ttl='168h', args=(submission_id,
+                                                     ordinal,
                                                      file_id,
                                                      hw_id,
                                                      filepath,

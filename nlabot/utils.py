@@ -120,7 +120,7 @@ def download_file(msg, student, conn):
     else:
         text = WRONG_TYPE_TEXT
 
-    return text, submission_id, file_id, hw_id, filepath
+    return text, submission_id, ordinal, file_id, hw_id, filepath
 
 
 def try_connect_db(dsn, nattempts=5):

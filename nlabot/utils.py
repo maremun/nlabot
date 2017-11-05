@@ -164,13 +164,13 @@ def check_title(file_name, conn):
 
 
 def patch_magic():
-    """Patch matplotlib magic with stub function and set default matplotlib
+    """Patch matplotlib magic with a stub function and set default matplotlib
     backend as `agg` which is suitable for non-interactive mode.
     """
 
     def stub(self, *args, **kwargs):
         """This function is a stub to avoid issue with interactivity in
-        non-interactive mode that arises due to using of `%matplotlib` magic.
+        non-interactive mode that arises due to the use of `%matplotlib` magic.
         """
         pass
 

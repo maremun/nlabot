@@ -1,10 +1,11 @@
 # NLAbot
-Welcome to **NLAbot**, Telegram bot for uploading and checking coding parts of homework via Telegram.
-NLAbot is used at Numerical Linear Algebra class. Check out our [Github repo](https://github.com/oseledets/nla2017).
+Welcome to **NLAbot**, Telegram bot for uploading and checking coding parts of
+homework via Telegram. **NLAbot** is used at Numerical Linear Algebra class,
+hence the name. Check out our [Github repo](https://github.com/oseledets/nla2017).
 NLA Instructors team is from [Scientific Computing group](http://oseledets.github.io/).
 
 ## Architecture Design
-NLAbot consists of three functional parts: Bot, TA and Jail. Bot interacts
+**NLAbot** consists of three functional parts: Bot, TA and Jail. Bot interacts
 with a student, registers and uploads submissions. TA brings up a container
 with the checking process (Jail). Once Jail processing is over, TA grades the
 work and sends a notification. Jail acts as an isolated checker, running
@@ -71,23 +72,24 @@ Jail is a part of NLAbot responsible for isolation of students' code.
 The bot process in Jail imports student's Jupyter notebook,
 runs a set of tests and then tells the caller TA student's score. 
 
-In order to check notebook manually one can run the following NLAbot CLI
+In order to check a notebook manually one can run the following NLAbot CLI
 command. The command takes two positional arguments: checker identifier and
-Jupyter notebook.
+a path to the notebook.
 
 This command demonstrates checking in a host system without any isolation:
 
 ```bash
-    nlabot imprison test notebooks/testnotebooks.ipynb
+    nlabot imprison test notebooks/testnotebook.ipynb
 ```
 
 And this one uses predefined compose-file to check student notebook in
- isolation:
+isolation:
 
 ```bash
     docker-compose build cell
     docker-compose run cell
 ```
+
 #### Isolation:
 
 The key aspect is using cgroups via docker in order to limit
@@ -116,6 +118,7 @@ Fortunately, there is a standard solution for importing Jupyter
 notebooks as modules. It introduces specific module finder and module loader.
 
 **Handling notebooks content**
+
 Due to interactive nature of Jupyter notebooks one should restrict its
 content.
 Jupyter cell magic `%matplotlib inline` is ubiquitous. Meanwhile it poses a

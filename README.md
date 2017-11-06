@@ -30,8 +30,8 @@ for launch and scaling.
 
 Bot is a primary point of contact. It handles all incoming Telegram updates,
 i.e. user messages, using long polling. It registers new students by updating
-database entries. To distribute homework checking among TAs, Bot relies on
-Redis Queue.
+database entries. To distribute and allow for asynchronous homework checking
+among TAs, Bot relies on Redis Queue.
 
 You can start bot locally like so:
 
@@ -48,10 +48,12 @@ docker-compose up bot
 
 ### TA
 
-TA is a background process initiated by Bot. TA itself launches an
-isolated container (Jail) to run a number of checks on a submitted homework
-solution. Once Jail finishes, TA reads the result (see details below) and
-calculates the grades and updates database entries.
+NLABot has a pool of background workers called TAs. As soon as submission arrives,
+it is queued for a check. The job is picked up by one of TAs from the pool. TA
+runs in background and launches synchronously an isolated container (Jail) to
+run a number of checks on a submitted homework solution. Once Jail finishes,
+TA reads the result (see details below) and calculates the grades and updates
+database entries.
 
 Run locally:
 
@@ -90,12 +92,12 @@ isolation:
     docker-compose run cell
 ```
 
-#### Isolation:
+#### Isolation
 
 The key aspect is using cgroups via docker in order to limit
 memory and CPU usage and to prohibit any networking (see docker-compose.yml).
 
-#### TA-Jail communication:
+#### TA-Jail communication
 
 There is no special IPC mechanism between TA and Jail. It is pretty straight
 forward and uses stdout, any shared file or FIFO.

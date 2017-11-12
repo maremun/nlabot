@@ -16,7 +16,8 @@ WRONG_TITLE_TEXT = "Uh-oh! Something wrong with your submission title. " \
                    "Please rename it as hw-_N_, where _N_ is the number of " \
                    "the homework you are trying to submit."
 WRONG_TYPE_TEXT = 'Uh-oh! Your submission is not a Jupyter notebook!'
-MIMES = ['text/plain', 'application/x-ipynb+json']
+MIMES = ['text/plain', 'application/x-ipynb+json', 'application/octet-stream',
+         '']
 
 
 def check_started(user_id, conn):
@@ -51,6 +52,7 @@ def download_file(msg, student, conn):
     mime_type = submission.get('mime_type', '')
     file_size = submission.get('file_size', 0)
     submission_id = None
+    ordinal = None
     hw_id = None
     filepath = None
     if file_size / 1048576 > 20:
@@ -104,7 +106,6 @@ def download_file(msg, student, conn):
                 with open(filepath, 'wb') as f:
                     f.write(download)
 
-                #   TODO: replace with global var SUCCESS_UPLOAD_TEMPLATE
                 text = SUCCESS_UPLOAD_TEXT.format(hw_id, ordinal,
                                                   first_name, last_name)
                 conn.commit()

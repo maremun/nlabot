@@ -8,6 +8,7 @@ import logging
 from importlib import import_module
 from json import dump
 from os.path import basename, dirname, realpath, splitext
+from os import chdir
 from redis import Redis
 from requests import Session
 from rq import Connection, Queue, Worker
@@ -70,10 +71,9 @@ def work(dsn, redis_host):
 def imprison(output, pset, filename):
     logging.info('CELL: cell created for %s.', filename)
     logging.info('CELL: patch ipython matplotlib magic')
-
     patch_magic()
     path.append(dirname(realpath(filename)))
-
+    chdir(realpath('data'))
     try:
         from .nbloader import NotebookFinder  # noqa
         module = import_module(splitext(basename(filename))[0])
@@ -91,6 +91,8 @@ def imprison(output, pset, filename):
         logging.error('CELL: checker failed.', exc_info=True)
         exit(1)
 
+    logging.info(result)
+    chdir(realpath('..'))
     if output:
         fout = open(output, 'w')
     else:

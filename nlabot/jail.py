@@ -65,6 +65,7 @@ def grade(submission_id, ordinal, file_id, hw_id, filepath, chat_id):
         logging.info('function %d: %r', i, f)
         if f.get('exc_info', False):
             logging.error('%s', f['exc_info'])
+# TODO send Memory and Syntax errors.
         p = sum(f['pass'])
         n = len(f['pass'])
         if p == n and n > 0:
@@ -144,6 +145,7 @@ def grade(submission_id, ordinal, file_id, hw_id, filepath, chat_id):
     else:
         send_sticker(chat_id, get_random_sticker(TRY))
 
+    logging.ingo('sent message: %s', text)
     logging.info('finished grading submission #%d.', submission_id)
     return
 

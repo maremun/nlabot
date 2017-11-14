@@ -6,13 +6,15 @@ import click
 import logging
 
 from importlib import import_module
+from io import StringIO
 from json import dump
 from os.path import basename, dirname, realpath, splitext
 from os import chdir
 from redis import Redis
 from requests import Session
 from rq import Connection, Queue, Worker
-from sys import path, stdout
+from sys import path, stdout, exc_info
+from traceback import print_exception
 
 from .telegram import get_updates
 from .handlers import handle_update
@@ -77,6 +79,15 @@ def imprison(output, pset, filename):
     try:
         from .nbloader import NotebookFinder  # noqa
         module = import_module(splitext(basename(filename))[0])
+    except (MemoryError, SyntaxError) as e:
+        fout = StringIO()
+        exc = exc_info()
+        print_exception(exc[0], exc[1], None, file=fout)
+        report = [{'error': fout.getvalue()}]
+        fout.close()
+        chdir(realpath('..'))
+        write_output(report, output)
+        exit(0)
     except Exception as e:
         logging.error('CELL: during homework processing an exception was '
                       'raised.', exc_info=True)
@@ -93,6 +104,10 @@ def imprison(output, pset, filename):
 
     logging.info(result)
     chdir(realpath('..'))
+    write_output(result, output)
+
+
+def write_output(result, output):
     if output:
         fout = open(output, 'w')
     else:

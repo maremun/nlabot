@@ -36,7 +36,7 @@ TAKEN_ERROR = "Uh-oh! Somebody took your name! Please report this to your TA!"
 
 
 def handle_update(update, sess, conn, queue):
-    print(update)
+    logging.info('%r', update)
     if update.get('message'):
         msg = update['message']
         user_id = msg['from']['id']

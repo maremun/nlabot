@@ -3,7 +3,8 @@
 
 from collections import Callable
 from io import StringIO
-from traceback import print_exc
+from sys import exc_info
+from traceback import print_exc, print_exception
 
 
 class IChecker(object):
@@ -73,6 +74,11 @@ class TestChecker(IChecker):
                 else:
                     if result == func(argument):
                         report['pass'][i] = 1
+        except MemoryError as e:
+            fout = StringIO()
+            print_exception(*exc_info()[:2], None, file=fout)
+            report['mem'] = fout.getvalue()
+            fout.close()
         except Exception as e:
             fout = StringIO()
             print_exc(file=fout)

@@ -6,6 +6,7 @@ import logging
 from docker import APIClient
 from json import JSONDecodeError, loads
 from os.path import basename, exists, join
+from requests.exceptions import ConnectionError
 
 from .telegram import get_file, send_sticker, send_message
 from .utils import try_connect_db
@@ -46,6 +47,7 @@ def grade(submission_id, ordinal, file_id, hw_id, filepath, chat_id):
             send_sticker(chat_id, get_random_sticker(SORRY))
         elif code == 2:
             send_message(chat_id, TIMEOUT_TEXT)
+            send_sticker(chat_id, get_random_sticker(TRY))
         elif code == 4:
             send_message(chat_id, PROBLEM_TEXT)
             send_sticker(chat_id, get_random_sticker(TRY))
@@ -54,7 +56,16 @@ def grade(submission_id, ordinal, file_id, hw_id, filepath, chat_id):
                                   'submit is not available.')
             send_sticker(chat_id, get_random_sticker(TRY))
 
-        logging.warn(result, submission_id)
+        logging.warn('%r, %r', result, submission_id)
+        return
+
+    if result[0].get('error', False):
+        result = result[0]
+        error = result['error']
+        send_message(chat_id, error, parse_mode=None)
+        send_message(chat_id, PROBLEM_TEXT)
+        send_sticker(chat_id, get_random_sticker(TRY))
+        logging.error('%s', result['error'])
         return
 
     # Calculate a grade
@@ -65,7 +76,10 @@ def grade(submission_id, ordinal, file_id, hw_id, filepath, chat_id):
         logging.info('function %d: %r', i, f)
         if f.get('exc_info', False):
             logging.error('%s', f['exc_info'])
-# TODO send Memory and Syntax errors.
+        if f.get('mem', False):
+            logging.error('%s', f['mem'])
+            send_message(chat_id,
+                         'Function #%d has a problem: %s' % (i+1, f['mem']))
         p = sum(f['pass'])
         n = len(f['pass'])
         if p == n and n > 0:
@@ -145,7 +159,7 @@ def grade(submission_id, ordinal, file_id, hw_id, filepath, chat_id):
     else:
         send_sticker(chat_id, get_random_sticker(TRY))
 
-    logging.ingo('sent message: %s', text)
+    logging.info('sent message: %s', text)
     logging.info('finished grading submission #%d.', submission_id)
     return
 
@@ -157,7 +171,6 @@ def isolate(pset, filename):
     tests_module = join(HOST_PATH, 'nlabot', pset + '_tests.py')
     data = join(HOST_PATH, 'notebooks', 'data')
     open(result, 'w').close()
-    logging.info(ref_notebook)
     if exists(ref_notebook):
         return 5, 'finished grading submission #%d due to wrong pset number.'
 
@@ -200,12 +213,18 @@ def isolate(pset, filename):
         # TODO: send alert
         return 1, 'finished grading submission #%d due to container failure.'
 
-    retcode = cli.wait(container, 1200)  # 20 minutes to grade
+    try:
+        retcode = cli.wait(container, 1200)  # 20 minutes to grade
+    except ConnectionError as e:
+        # FIXME
+        retcode = -1
+        # return 2, 'finished grading submission #%d due to timeout.'
     logging.info('retcode is %d', retcode)
     logging.info('%s', cli.logs(container).decode('utf8'))
 
     if retcode == -1:
         return 2, 'finished grading submission #%d due to timeout.'
+    # if retcode != 0:
     elif retcode != 0:
         return 3, 'finished grading submission #%d due to some internal ' \
                   'problem.'

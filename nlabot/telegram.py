@@ -91,10 +91,14 @@ def set_webhook(url, certificate=None, max_connections=None,
 
 def get_file(file_id, sess=None):
     r = send_request('getFile', {'file_id': file_id})
-    print(r)
     file_path = r['result']['file_path']
     download_link = API_DOWNLOAD_URL.format(token=API_TOKEN,
                                             file_path=file_path)
 # TODO if file is loo big?
     download = get(download_link)
     return download.content
+
+
+def send_sticker(chat_id, file_id, sess=None):
+    return send_request('sendSticker', {'chat_id': chat_id,
+                                        'sticker': file_id})

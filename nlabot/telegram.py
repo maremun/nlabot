@@ -9,14 +9,14 @@ See for details https://core.telegram.org/bots/api.
 import logging
 
 from requests import Session, get
-from .settings import API_URL, API_TOKEN, API_DOWNLOAD_URL
+from .settings import API_URL, API_TOKEN, API_DOWNLOAD_URL, PROXIES
 
 
 def send_request(method=None, params=None, sess=None):
     if not sess:
         sess = Session()
 
-    url = API_URL.format(token=API_TOKEN, method=method)
+    url = API_URL.format(token=API_TOKEN, method=method, proxies=PROXIES)
     r = sess.get(url, params=params)
 
     if r.status_code != 200:

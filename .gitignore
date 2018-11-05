@@ -13,4 +13,5 @@ var/
 notebooks/
 
 # ignore configuration files
+.proxy_env
 nlabot_settings.py

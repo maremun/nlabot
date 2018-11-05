@@ -18,6 +18,8 @@ services:
     bot:
         build: .
         command: serve
+        environment:
+        - https_proxies=
         links:
         - 'postgres'
         - 'redis'

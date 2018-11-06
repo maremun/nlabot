@@ -16,8 +16,9 @@ def send_request(method=None, params=None, sess=None):
     if not sess:
         sess = Session()
 
-    url = API_URL.format(token=API_TOKEN, method=method, proxies=PROXIES)
-    r = sess.get(url, params=params)
+    url = API_URL.format(token=API_TOKEN, method=method)
+    # TODO: Fix certificate check
+    r = sess.get(url, params=params, proxies=PROXIES, verify=False)
 
     if r.status_code != 200:
         logging.error('request failed with status code %d', r.status_code)

@@ -29,7 +29,7 @@ psycopg2==2.7.5
 ptyprocess==0.6.0
 pycodestyle==2.4.0
 pyflakes==2.0.0
-Pygments==2.2.0
+Pygments==2.7.4
 Pysocks==1.6.8
 python-dateutil==2.7.5
 python-editor==1.0.3
